@@ -1,3 +1,4 @@
+/* eslint-disable no-undefined */
 /* eslint-disable no-undef */
 /* eslint-disable no-unsafe-optional-chaining */
 const { WhatsAppInstance } = require('../class/instance')
@@ -14,29 +15,18 @@ class Session {
             result.forEach((collection) => {
                 allCollections.push(collection.name)
             })
-
-            allCollections.map((key) => {
+            for (const key of allCollections) {
                 const query = {}
-                db.collection(key)
-                    .find(query)
-                    .toArray(async (err, result) => {
-                        if (err) throw err
-                        const webhook = !config.webhookEnabled
-                            ? undefined
-                            : config.webhookEnabled
-                        const webhookUrl = !config.webhookUrl
-                            ? undefined
-                            : config.webhookUrl
-                        const instance = new WhatsAppInstance(
-                            key,
-                            webhook,
-                            webhookUrl
-                        )
-                        await instance.init()
-                        WhatsAppInstances[key] = instance
-                    })
+                await db.collection(key).find(query).toArray()
+
+                const webhook = !config.webhookEnabled ? undefined : config.webhookEnabled
+                const webhookUrl = !config.webhookUrl ? undefined : config.webhookUrl
+                const instance = new WhatsAppInstance(key, webhook, webhookUrl)
+                await instance.init()
+                WhatsAppInstances[key] = instance
+
                 restoredSessions.push(key)
-            })
+            }
         } catch (e) {
             logger.error('Error restoring sessions')
             logger.error(e)

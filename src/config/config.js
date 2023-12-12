@@ -64,8 +64,8 @@ module.exports = {
         sessions: MONGODB_SESSIONS,
         options: {
             // useCreateIndex: true,
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
+            // useNewUrlParser: true,
+            // useUnifiedTopology: true,
         },
     },
     browser: {
