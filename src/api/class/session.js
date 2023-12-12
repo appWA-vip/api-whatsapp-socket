@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* eslint-disable no-unsafe-optional-chaining */
 const { WhatsAppInstance } = require('../class/instance')
 const logger = require('pino')()
@@ -8,7 +9,7 @@ class Session {
         let restoredSessions = new Array()
         let allCollections = []
         try {
-            const db = mongoClient.db('whatsapp-api')
+            const db = mongoClient.db(config.mongoose.sessions)
             const result = await db.listCollections().toArray()
             result.forEach((collection) => {
                 allCollections.push(collection.name)

@@ -25,8 +25,11 @@ const MONGODB_ENABLED = !!(
     process.env.MONGODB_ENABLED && process.env.MONGODB_ENABLED === 'true'
 )
 // URL of the Mongo DB
-const MONGODB_URL =
-    process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/WhatsAppInstance'
+const MONGODB_URL = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/whatsapp_api'
+
+// Database sessions of the Mongo DB
+const MONGODB_SESSIONS = process.env.MONGODB_SESSIONS || 'whatsapp_sessions'
+
 // Enable or disable webhook globally on project
 const WEBHOOK_ENABLED = !!(
     process.env.WEBHOOK_ENABLED && process.env.WEBHOOK_ENABLED === 'true'
@@ -58,6 +61,7 @@ module.exports = {
     mongoose: {
         enabled: MONGODB_ENABLED,
         url: MONGODB_URL,
+        sessions: MONGODB_SESSIONS,
         options: {
             // useCreateIndex: true,
             useNewUrlParser: true,
