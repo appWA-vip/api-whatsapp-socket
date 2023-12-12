@@ -36,10 +36,13 @@ const WEBHOOK_ENABLED = !!(
 )
 // Webhook URL
 const WEBHOOK_URL = process.env.WEBHOOK_URL
-// Receive message content in webhook (Base64 format)
-const WEBHOOK_BASE64 = !!(
-    process.env.WEBHOOK_BASE64 && process.env.WEBHOOK_BASE64 === 'true'
-)
+
+// Receive message MEDIA IN WEBHOOK
+const WEBHOOK_SEND_MEDIA = !!(process.env.WEBHOOK_SEND_MEDIA && process.env.WEBHOOK_SEND_MEDIA === 'true')
+
+// Type message MEDIA IN WEBHOOK
+const WEBHOOK_TYPE_MEDIA = process.env.WEBHOOK_TYPE_MEDIA || 'base'
+
 // allowed events which should be sent to webhook
 const WEBHOOK_ALLOWED_EVENTS = process.env.WEBHOOK_ALLOWED_EVENTS?.split(',') || ['all']
 // Mark messages as seen
@@ -75,8 +78,20 @@ module.exports = {
     },
     webhookEnabled: WEBHOOK_ENABLED,
     webhookUrl: WEBHOOK_URL,
-    webhookBase64: WEBHOOK_BASE64,
+    webhookSendMedia: WEBHOOK_SEND_MEDIA,
+    webhookTypeMedia: WEBHOOK_TYPE_MEDIA,
     protectRoutes: PROTECT_ROUTES,
     markMessagesRead: MARK_MESSAGES_READ,
-    webhookAllowedEvents: WEBHOOK_ALLOWED_EVENTS
+    webhookAllowedEvents: WEBHOOK_ALLOWED_EVENTS,
+    firebaseConfig: {
+        apiKey: process.env.FIREBASE_API_KEY || '',
+        authDomain: process.env.FIREBASE_AUTH_DOMAIN || '',
+        projectId: process.env.FIREBASE_PROJECT_ID || '',
+        databaseURL: process.env.FIREBASE_FIRESTORE_DB_URL || '',
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || '',
+        messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
+        appId: process.env.FIREBASE_APP_ID || '',
+        measurementId: process.env.FIREBASE_MEASUREMENT_ID || ''
+    }
 }
+

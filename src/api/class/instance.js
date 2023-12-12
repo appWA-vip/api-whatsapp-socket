@@ -16,6 +16,8 @@ const downloadMessage = require('../helper/downloadMsg')
 const logger = require('pino')()
 const Contacts = require('../models/contacts.model')
 const useMongoDBAuthState = require('../helper/mongoAuthState')
+const sleep = require('../helper/sleep')
+const parseMessage = require('../helper/parseMessage')
 
 class WhatsAppInstance {
     socketConfig = {
@@ -54,6 +56,8 @@ class WhatsAppInstance {
         'connection:open',
         'connection:qr',
         'connection:live',
+        'messages',
+        'messages.upsert'
     ]
 
     constructor(key, allowWebhook, webhook) {
@@ -72,7 +76,7 @@ class WhatsAppInstance {
     }
 
     async SendWebhook(type, body, key) {
-        if (!this.allowWebhook) return
+        if (!this.allowWebhook) return;
         this.axiosInstance
             .post('', {
                 type,
@@ -294,10 +298,6 @@ class WhatsAppInstance {
 
         // on new mssage
         sock?.ev.on('messages.upsert', async (m) => {
-            console.log('messages.upsert', m)
-            if (m.type === 'prepend')
-                this.instance.messages.unshift(...m.messages)
-            if (m.type !== 'notify') return
 
             // https://adiwajshing.github.io/Baileys/#reading-messages
             if (config.markMessagesRead) {
@@ -311,61 +311,24 @@ class WhatsAppInstance {
                 await sock.readMessages(unreadMessages)
             }
 
-            this.instance.messages.unshift(...m.messages)
-
             m.messages.map(async (msg) => {
-                if (!msg.message) return
-
-                const messageType = Object.keys(msg.message)[0]
-                if (
-                    [
-                        'protocolMessage',
-                        'senderKeyDistributionMessage',
-                    ].includes(messageType)
-                )
-                    return
+                if (!msg.message) return;
+                if (msg.key.participant !== undefined) return;
+                if (JSON.stringify(msg).includes('Invalid PreKey ID')) return;
+                const message = await parseMessage(msg, m.type, this.key);
 
                 const webhookData = {
                     key: this.key,
-                    ...msg,
+                    ...message,
                 }
 
-                if (messageType === 'conversation') {
-                    webhookData['text'] = m
-                }
-                if (config.webhookBase64) {
-                    switch (messageType) {
-                        case 'imageMessage':
-                            webhookData['msgContent'] = await downloadMessage(
-                                msg.message.imageMessage,
-                                'image'
-                            )
-                            break
-                        case 'videoMessage':
-                            webhookData['msgContent'] = await downloadMessage(
-                                msg.message.videoMessage,
-                                'video'
-                            )
-                            break
-                        case 'audioMessage':
-                            webhookData['msgContent'] = await downloadMessage(
-                                msg.message.audioMessage,
-                                'audio'
-                            )
-                            break
-                        default:
-                            webhookData['msgContent'] = ''
-                            break
-                    }
-                }
-                if (
-                    ['all', 'messages', 'messages.upsert'].some((e) =>
-                        config.webhookAllowedEvents.includes(e)
-                    )
-                )
-                    await this.SendWebhook('message', webhookData, this.key)
-            })
-        })
+                console.log("webhookData", webhookData);
+
+                await this.callWebhook('message', webhookData);
+
+            });
+
+        });
 
         sock?.ev.on('messages.update', async (messages) => {
             //console.log('messages.update')
@@ -475,6 +438,18 @@ class WhatsAppInstance {
                     this.key
                 )
         })
+    }
+
+    async sendMessageWTyping(msg, jid) {
+        await this.instance.sock.presenceSubscribe(jid)
+        await sleep(500)
+
+        await this.instance.sock.sendPresenceUpdate('composing', jid)
+        await sleep(2000)
+
+        await this.instance.sock.sendPresenceUpdate('paused', jid)
+
+        await this.instance.sock.sendMessage(jid, msg)
     }
 
     async deleteInstance(key) {

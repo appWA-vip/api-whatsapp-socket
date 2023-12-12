@@ -1,6 +1,7 @@
 const dotenv = require('dotenv')
 const mongoose = require('mongoose')
 const logger = require('pino')()
+const { initializeApp } = require('firebase/app')
 dotenv.config()
 
 const app = require('./config/express')
@@ -16,6 +17,12 @@ if (config.mongoose.enabled) {
     mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
         logger.info('Connected to MongoDB')
     })
+}
+
+if (config.webhookSendMedia) {
+    if (config.webhookTypeMedia === "firebase") {
+        initializeApp(config.firebaseConfig);
+    }
 }
 
 server = app.listen(config.port, async () => {
