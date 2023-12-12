@@ -33,7 +33,7 @@
     "license": "MIT",
     "dependencies": {
         "@adiwajshing/keyed-db": "^0.2.4",
-        "@whiskeysockets/baileys": "^6.5.0",
+        "@whiskeysockets/baileys": "github:WhiskeySockets/Baileys#update-proto/stable",
         "axios": "^1.1.3",
         "dotenv": "^16.0.3",
         "ejs": "^3.1.7",
