@@ -231,61 +231,6 @@ class WhatsAppInstance {
                 await this.SendWebhook('presence', json, this.key)
         })
 
-        // on receive all chats
-        sock?.ev.on('chats.set', async ({ chats }) => {
-            this.instance.chats = []
-            const recivedChats = chats.map((chat) => {
-                return {
-                    ...chat,
-                    messages: [],
-                }
-            })
-            this.instance.chats.push(...recivedChats)
-            await this.updateDb(this.instance.chats)
-            await this.updateDbGroupsParticipants()
-        })
-
-        // on recive new chat
-        sock?.ev.on('chats.upsert', (newChat) => {
-            //console.log('chats.upsert')
-            //console.log(newChat)
-            const chats = newChat.map((chat) => {
-                return {
-                    ...chat,
-                    messages: [],
-                }
-            })
-            this.instance.chats.push(...chats)
-        })
-
-        // on chat change
-        sock?.ev.on('chats.update', (changedChat) => {
-            //console.log('chats.update')
-            //console.log(changedChat)
-            changedChat.map((chat) => {
-                const index = this.instance.chats.findIndex(
-                    (pc) => pc.id === chat.id
-                )
-                const PrevChat = this.instance.chats[index]
-                this.instance.chats[index] = {
-                    ...PrevChat,
-                    ...chat,
-                }
-            })
-        })
-
-        // on chat delete
-        sock?.ev.on('chats.delete', (deletedChats) => {
-            //console.log('chats.delete')
-            //console.log(deletedChats)
-            deletedChats.map((chat) => {
-                const index = this.instance.chats.findIndex(
-                    (c) => c.id === chat
-                )
-                this.instance.chats.splice(index, 1)
-            })
-        })
-
         sock?.ev.on('contacts.upsert', async (m) => {
             const contacts = this.parseContacts(m);
             this.upsertContactInContacts(contacts);
@@ -330,10 +275,6 @@ class WhatsAppInstance {
 
         });
 
-        sock?.ev.on('messages.update', async (messages) => {
-            //console.log('messages.update')
-            //console.dir(messages);
-        })
         sock?.ws.on('CB:call', async (data) => {
             if (data.content) {
                 if (data.content.find((e) => e.tag === 'offer')) {
