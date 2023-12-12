@@ -1,23 +1,26 @@
 exports.Text = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].sendTextMessage(
         req.body.id,
-        req.body.message
+        req.body.message,
+        req
     )
     return res.status(201).json({ error: false, data: data })
 }
 
 exports.Image = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].sendMediaFile(
+        req,
         req.body.id,
         req.file,
         'image',
-        req.body?.caption
+        req.body?.caption,
     )
     return res.status(201).json({ error: false, data: data })
 }
 
 exports.Video = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].sendMediaFile(
+        req,
         req.body.id,
         req.file,
         'video',
@@ -28,6 +31,7 @@ exports.Video = async (req, res) => {
 
 exports.Audio = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].sendMediaFile(
+        req,
         req.body.id,
         req.file,
         'audio'
@@ -37,6 +41,7 @@ exports.Audio = async (req, res) => {
 
 exports.Document = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].sendMediaFile(
+        req,
         req.body.id,
         req.file,
         'document',
@@ -48,6 +53,7 @@ exports.Document = async (req, res) => {
 
 exports.Mediaurl = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].sendUrlMediaFile(
+        req,
         req.body.id,
         req.body.url,
         req.body.type, // Types are [image, video, audio, document]
@@ -60,6 +66,7 @@ exports.Mediaurl = async (req, res) => {
 exports.Button = async (req, res) => {
     // console.log(res.body)
     const data = await WhatsAppInstances[req.query.key].sendButtonMessage(
+        req,
         req.body.id,
         req.body.btndata
     )
@@ -68,6 +75,7 @@ exports.Button = async (req, res) => {
 
 exports.Contact = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].sendContactMessage(
+        req,
         req.body.id,
         req.body.vcard
     )
@@ -76,6 +84,7 @@ exports.Contact = async (req, res) => {
 
 exports.List = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].sendListMessage(
+        req,
         req.body.id,
         req.body.msgdata
     )
@@ -84,6 +93,7 @@ exports.List = async (req, res) => {
 
 exports.MediaButton = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].sendMediaButtonMessage(
+        req,
         req.body.id,
         req.body.btndata
     )

@@ -2,7 +2,7 @@ const express = require('express')
 const controller = require('../controllers/instance.controller')
 const keyVerify = require('../middlewares/keyCheck')
 const loginVerify = require('../middlewares/loginCheck')
-const checkInstance = require('../middlewares/instanceCheck,js')
+const checkInstance = require('../middlewares/instanceCheck.js')
 
 const router = express.Router()
 router.route('/init').get(checkInstance, controller.init)

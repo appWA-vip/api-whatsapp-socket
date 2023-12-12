@@ -403,16 +403,20 @@ class WhatsAppInstance {
         })
     }
 
-    async sendMessageWTyping(msg, jid) {
-        await this.instance.sock.presenceSubscribe(jid)
-        await sleep(500)
+    async sendMessageWTyping(jid, value, presence, subscribe, update) {
+        if (!presence) return;
 
-        await this.instance.sock.sendPresenceUpdate('composing', jid)
-        await sleep(2000)
+        this.instance.presence = true;
 
-        await this.instance.sock.sendPresenceUpdate('paused', jid)
+        await this.instance.sock.presenceSubscribe(jid);
+        await sleep(subscribe);
 
-        await this.instance.sock.sendMessage(jid, msg)
+        await this.instance.sock.sendPresenceUpdate(value, jid);
+        await sleep(update);
+
+        await this.instance.sock.sendPresenceUpdate('paused', jid);
+
+        this.instance.presence = false;
     }
 
     async deleteInstance(key) {
@@ -444,8 +448,10 @@ class WhatsAppInstance {
         throw new Error('no account exists')
     }
 
-    async sendTextMessage(to, message) {
-        await this.verifyId(this.getWhatsAppId(to))
+    async sendTextMessage(to, message, req) {
+        const jid = this.getWhatsAppId(to);
+        await this.verifyId(jid);
+        await this.sendMessageWTyping(jid, 'composing', req.body.presence, req.body.subscribe, req.body.update);
         const data = await this.instance.sock?.sendMessage(
             this.getWhatsAppId(to),
             { text: message }
@@ -453,8 +459,10 @@ class WhatsAppInstance {
         return data
     }
 
-    async sendMediaFile(to, file, type, caption = '', filename) {
-        await this.verifyId(this.getWhatsAppId(to))
+    async sendMediaFile(req, to, file, type, caption = '', filename) {
+        const jid = this.getWhatsAppId(to);
+        await this.verifyId(jid);
+        await this.sendMessageWTyping(jid, 'composing', req.body.presence, req.body.subscribe, req.body.update);
         const data = await this.instance.sock?.sendMessage(
             this.getWhatsAppId(to),
             {
@@ -468,8 +476,10 @@ class WhatsAppInstance {
         return data
     }
 
-    async sendUrlMediaFile(to, url, type, mimeType, caption = '') {
-        await this.verifyId(this.getWhatsAppId(to))
+    async sendUrlMediaFile(req, to, url, type, mimeType, caption = '') {
+        const jid = this.getWhatsAppId(to);
+        await this.verifyId(jid);
+        await this.sendMessageWTyping(jid, 'composing', req.body.presence, req.body.subscribe, req.body.update);
 
         const data = await this.instance.sock?.sendMessage(
             this.getWhatsAppId(to),
@@ -510,8 +520,11 @@ class WhatsAppInstance {
         return status
     }
 
-    async sendButtonMessage(to, data) {
-        await this.verifyId(this.getWhatsAppId(to))
+    async sendButtonMessage(req, to, data) {
+        const jid = this.getWhatsAppId(to);
+        await this.verifyId(jid);
+        await this.sendMessageWTyping(jid, 'composing', req.body.presence, req.body.subscribe, req.body.update);
+
         const result = await this.instance.sock?.sendMessage(
             this.getWhatsAppId(to),
             {
@@ -524,8 +537,11 @@ class WhatsAppInstance {
         return result
     }
 
-    async sendContactMessage(to, data) {
-        await this.verifyId(this.getWhatsAppId(to))
+    async sendContactMessage(req, to, data) {
+        const jid = this.getWhatsAppId(to);
+        await this.verifyId(jid);
+        await this.sendMessageWTyping(jid, 'composing', req.body.presence, req.body.subscribe, req.body.update);
+
         const vcard = generateVC(data)
         const result = await this.instance.sock?.sendMessage(
             await this.getWhatsAppId(to),
@@ -539,8 +555,11 @@ class WhatsAppInstance {
         return result
     }
 
-    async sendListMessage(to, data) {
-        await this.verifyId(this.getWhatsAppId(to))
+    async sendListMessage(req, to, data) {
+        const jid = this.getWhatsAppId(to);
+        await this.verifyId(jid);
+        await this.sendMessageWTyping(jid, 'composing', req.body.presence, req.body.subscribe, req.body.update);
+
         const result = await this.instance.sock?.sendMessage(
             this.getWhatsAppId(to),
             {
@@ -555,8 +574,10 @@ class WhatsAppInstance {
         return result
     }
 
-    async sendMediaButtonMessage(to, data) {
-        await this.verifyId(this.getWhatsAppId(to))
+    async sendMediaButtonMessage(req, to, data) {
+        const jid = this.getWhatsAppId(to);
+        await this.verifyId(jid);
+        await this.sendMessageWTyping(jid, 'composing', req.body.presence, req.body.subscribe, req.body.update);
 
         const result = await this.instance.sock?.sendMessage(
             this.getWhatsAppId(to),
