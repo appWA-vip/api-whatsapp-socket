@@ -50,6 +50,9 @@ const MARK_MESSAGES_READ = !!(
     process.env.MARK_MESSAGES_READ && process.env.MARK_MESSAGES_READ === 'true'
 )
 
+// Enable or disable presence
+const HIDDEN_PRESENCE = !!(process.env.HIDDEN_PRESENCE && process.env.HIDDEN_PRESENCE === 'true')
+
 module.exports = {
     port: PORT,
     token: TOKEN,
@@ -92,6 +95,7 @@ module.exports = {
         messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
         appId: process.env.FIREBASE_APP_ID || '',
         measurementId: process.env.FIREBASE_MEASUREMENT_ID || ''
-    }
+    },
+    hiddenPresence: HIDDEN_PRESENCE
 }
 

@@ -4,6 +4,7 @@
 /* eslint-disable no-unsafe-optional-chaining */
 const QRCode = require('qrcode')
 const pino = require('pino')
+const events = require('events')
 const { default: makeWASocket, DisconnectReason } = require('@whiskeysockets/baileys')
 const { unlinkSync } = require('fs')
 const { v4: uuidv4 } = require('uuid')
@@ -43,6 +44,8 @@ class WhatsAppInstance {
         messages: [],
         qrRetry: 0,
         customWebhook: '',
+        em: new events.EventEmitter(),
+        presence: false
     }
 
     axiosInstance = axios.create({
@@ -110,6 +113,7 @@ class WhatsAppInstance {
                 this.instance.sock.ws.close()
             } else if (type === "removeAllListeners") {
                 this.instance.sock.ev.removeAllListeners()
+                this.instance.em.removeAllListeners()
             } else if (type === "logout") {
                 await this.instance.sock.logout()
             } else if (type === "delete") {
@@ -179,11 +183,27 @@ class WhatsAppInstance {
         sock?.ev.on('creds.update', this.authState.saveCreds)
 
         // on send live conection
-        sock?.ev.on('creds.update', async () => {
+        this.instance.em.on('connection:live', async () => {
             if (this.instance.online) {
                 await this.callWebhook('connection:live', { live: true });
+                setTimeout(() => {
+                    this.instance.em.emit('connection:live');
+                }, 30000);
             }
-        })
+        });
+
+        // hidden presence
+        this.instance.em.on('send:presence', async () => {
+            if (!config.hiddenPresence) return;
+            if (this.instance.online && !this.instance.presence) {
+                await this.instance.sock.sendPresenceUpdate('unavailable');
+            }
+            if (this.instance.online) {
+                setTimeout(() => {
+                    this.instance.em.emit('send:presence');
+                }, 8000);
+            }
+        });
 
         // on socket closed, opened, connecting
         sock?.ev.on('connection.update', async (update) => {
@@ -206,6 +226,8 @@ class WhatsAppInstance {
                 await this.initContactsChats(Contacts);
                 this.instance.online = true;
                 await this.callWebhook('connection', { connection: connection });
+                this.instance.em.emit('connection:live');
+                this.instance.em.emit('send:presence');
             }
 
             if (qr) {
