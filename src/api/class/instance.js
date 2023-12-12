@@ -1,15 +1,12 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable no-undef */
 /* eslint-disable no-undefined */
 /* eslint-disable no-unsafe-optional-chaining */
 const QRCode = require('qrcode')
 const pino = require('pino')
-const {
-    default: makeWASocket,
-    DisconnectReason,
-} = require('@whiskeysockets/baileys')
+const { default: makeWASocket, DisconnectReason } = require('@whiskeysockets/baileys')
 const { unlinkSync } = require('fs')
 const { v4: uuidv4 } = require('uuid')
-const path = require('path')
 const processButton = require('../helper/processbtn')
 const generateVC = require('../helper/genVc')
 const Chat = require('../models/chat.model')
@@ -17,6 +14,7 @@ const axios = require('axios')
 const config = require('../../config/config')
 const downloadMessage = require('../helper/downloadMsg')
 const logger = require('pino')()
+const Contacts = require('../models/contacts.model')
 const useMongoDBAuthState = require('../helper/mongoAuthState')
 
 class WhatsAppInstance {
@@ -26,6 +24,10 @@ class WhatsAppInstance {
         logger: pino({
             level: config.log.level,
         }),
+        syncFullHistory: true,
+        markOnlineOnConnect: false,
+        fireInitQueries: false,
+        generateHighQualityLinkPreview: true,
     }
     key = ''
     authState
@@ -80,12 +82,19 @@ class WhatsAppInstance {
             .catch(() => { })
     }
 
+    async ensureCollectionExists() {
+        const collections = await mongoClient.db(config.mongoose.sessions).listCollections({ name: this.key }).toArray();
+        if (collections.length === 0) await mongoClient.db(config.mongoose.sessions).createCollection(this.key);
+    }
+
     async init() {
+        await this.ensureCollectionExists();
         this.collection = mongoClient.db(config.mongoose.sessions).collection(this.key)
-        const { state, saveCreds } = await useMongoDBAuthState(this.collection)
+        const { state, saveCreds } = await useMongoDBAuthState({ collection: this.collection });
         this.authState = { state: state, saveCreds: saveCreds }
         this.socketConfig.auth = this.authState.state
         this.socketConfig.browser = Object.values(config.browser)
+        //this.socketConfig.browser = Browsers.macOS('Desktop')
         this.instance.sock = makeWASocket(this.socketConfig)
         this.setHandler()
         return this
@@ -103,6 +112,10 @@ class WhatsAppInstance {
                 delete WhatsAppInstances[this.key]
             } else if (type === "session") {
                 await this.collection.drop()
+            } else if (type === "chats") {
+                await Chat.deleteMany({ key: this.key });
+            } else if (type === "contacts") {
+                await Contacts.deleteMany({ key: this.key });
             }
         } catch (error) {
             logger.error('ERROR: Removed ' + type)
@@ -115,6 +128,8 @@ class WhatsAppInstance {
         await this.remove("removeAllListeners")
         await this.remove("logout")
         await this.remove("session")
+        await this.remove("chats")
+        await this.remove("contacts")
         await this.remove("delete")
         logger.info('Destroy: ' + _this.key)
     }
@@ -122,6 +137,35 @@ class WhatsAppInstance {
     async callWebhook(type, body) {
         if (this.hooks.some((e) => config.webhookAllowedEvents.includes(e))) {
             await this.SendWebhook(type, body, this.key)
+        }
+    }
+
+    async initContactsChats(Table) {
+        if (config.mongoose.enabled) {
+            let alreadyThere = await Table.findOne({
+                key: this.key,
+            }).exec()
+            if (!alreadyThere) {
+                const save = new Table({ key: this.key })
+                await save.save()
+            }
+        }
+    }
+
+    parseContacts(contacts = []) {
+        try {
+            const data = [];
+            for (const c of contacts) {
+                const d = { phone: c.id, updatedAt: new Date(), createdAt: new Date() };
+                if (c.name !== undefined) d.name = c.name;
+                if (c.notify !== undefined) d.notify = c.notify;
+                if (c.verifiedName !== undefined) d.verifiedName = c.verifiedName;
+                if (d.name === undefined && d.notify === undefined && d.verifiedName === undefined) continue;
+                data.push(d);
+            }
+            return data;
+        } catch (error) {
+            return contacts;
         }
     }
 
@@ -154,16 +198,9 @@ class WhatsAppInstance {
                     await this.init()
                 }
             } else if (connection === 'open') {
-                if (config.mongoose.enabled) {
-                    let alreadyThere = await Chat.findOne({
-                        key: this.key,
-                    }).exec()
-                    if (!alreadyThere) {
-                        const saveChat = new Chat({ key: this.key })
-                        await saveChat.save()
-                    }
-                }
-                this.instance.online = true
+                await this.initContactsChats(Chat);
+                await this.initContactsChats(Contacts);
+                this.instance.online = true;
                 await this.callWebhook('connection', { connection: connection });
             }
 
@@ -245,10 +282,19 @@ class WhatsAppInstance {
             })
         })
 
+        sock?.ev.on('contacts.upsert', async (m) => {
+            const contacts = this.parseContacts(m);
+            this.upsertContactInContacts(contacts);
+        });
+
+        sock?.ev.on('contacts.update', async (m) => {
+            const contacts = this.parseContacts(m);
+            this.upsertContactInContacts(contacts);
+        });
+
         // on new mssage
         sock?.ev.on('messages.upsert', async (m) => {
-            //console.log('messages.upsert')
-            //console.log(m)
+            console.log('messages.upsert', m)
             if (m.type === 'prepend')
                 this.instance.messages.unshift(...m.messages)
             if (m.type !== 'notify') return
@@ -1016,6 +1062,32 @@ class WhatsAppInstance {
             logger.error('Error react message failed')
         }
     }
+
+    async upsertContactInContacts(newContacts) {
+        try {
+            if (config.mongoose.enabled) {
+                await this.initContactsChats(Contacts);
+                const contactsDocument = await Contacts.findOne({ key: this.key });
+                for (const contact of newContacts) {
+                    const existingContactIndex = contactsDocument.contacts.findIndex(c => c.phone === contact.phone);
+                    if (existingContactIndex > -1) {
+                        const d = contactsDocument.contacts[existingContactIndex];
+                        if (contact.name !== undefined) d.name = contact.name;
+                        if (contact.notify !== undefined) d.notify = contact.notify;
+                        if (contact.verifiedName !== undefined) d.verifiedName = contact.verifiedName;
+                        d.updatedAt = new Date();
+                        contactsDocument.contacts[existingContactIndex] = d;
+                    } else {
+                        contactsDocument.contacts.push(contact);
+                    }
+                }
+                await contactsDocument.save();
+            }
+        } catch (error) {
+            return null;
+        }
+    }
+
 }
 
 exports.WhatsAppInstance = WhatsAppInstance
