@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-undefined */
 /* eslint-disable no-unsafe-optional-chaining */
 const QRCode = require('qrcode')
 const pino = require('pino')
@@ -43,6 +45,15 @@ class WhatsAppInstance {
         baseURL: config.webhookUrl,
     })
 
+    hooks = [
+        'all',
+        'connection',
+        'connection.update',
+        'connection:open',
+        'connection:qr',
+        'connection:live',
+    ]
+
     constructor(key, allowWebhook, webhook) {
         this.key = key ? key : uuidv4()
         this.instance.customWebhook = this.webhook ? this.webhook : webhook
@@ -66,11 +77,11 @@ class WhatsAppInstance {
                 body,
                 instanceKey: key,
             })
-            .catch(() => {})
+            .catch(() => { })
     }
 
     async init() {
-        this.collection = mongoClient.db('whatsapp-api').collection(this.key)
+        this.collection = mongoClient.db(config.mongoose.sessions).collection(this.key)
         const { state, saveCreds } = await useMongoDBAuthState(this.collection)
         this.authState = { state: state, saveCreds: saveCreds }
         this.socketConfig.auth = this.authState.state
@@ -80,46 +91,68 @@ class WhatsAppInstance {
         return this
     }
 
+    async remove(type) {
+        try {
+            if (type === "close") {
+                this.instance.sock.ws.close()
+            } else if (type === "removeAllListeners") {
+                this.instance.sock.ev.removeAllListeners()
+            } else if (type === "logout") {
+                await this.instance.sock.logout()
+            } else if (type === "delete") {
+                delete WhatsAppInstances[this.key]
+            } else if (type === "session") {
+                await this.collection.drop()
+            }
+        } catch (error) {
+            logger.error('ERROR: Removed ' + type)
+        }
+    }
+
+    async destroy() {
+        const _this = this
+        await this.remove("close")
+        await this.remove("removeAllListeners")
+        await this.remove("logout")
+        await this.remove("session")
+        await this.remove("delete")
+        logger.info('Destroy: ' + _this.key)
+    }
+
+    async callWebhook(type, body) {
+        if (this.hooks.some((e) => config.webhookAllowedEvents.includes(e))) {
+            await this.SendWebhook(type, body, this.key)
+        }
+    }
+
     setHandler() {
         const sock = this.instance.sock
         // on credentials update save state
         sock?.ev.on('creds.update', this.authState.saveCreds)
 
+        // on send live conection
+        sock?.ev.on('creds.update', async () => {
+            if (this.instance.online) {
+                await this.callWebhook('connection:live', { live: true });
+            }
+        })
+
         // on socket closed, opened, connecting
         sock?.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect, qr } = update
+            const statusCode = lastDisconnect?.error?.output?.statusCode;
 
             if (connection === 'connecting') return
 
-            if (connection === 'close') {
-                // reconnect if not logged out
-                if (
-                    lastDisconnect?.error?.output?.statusCode !==
-                    DisconnectReason.loggedOut
-                ) {
-                    await this.init()
-                } else {
-                    await this.collection.drop().then((r) => {
-                        logger.info('STATE: Droped collection')
-                    })
-                    this.instance.online = false
-                }
+            if (statusCode === DisconnectReason.loggedOut) {
+                await this.destroy();
+                await this.callWebhook('connection', { connection: connection });
+            }
 
-                if (
-                    [
-                        'all',
-                        'connection',
-                        'connection.update',
-                        'connection:close',
-                    ].some((e) => config.webhookAllowedEvents.includes(e))
-                )
-                    await this.SendWebhook(
-                        'connection',
-                        {
-                            connection: connection,
-                        },
-                        this.key
-                    )
+            if (connection === 'close') {
+                if (statusCode !== DisconnectReason.loggedOut) {
+                    await this.init()
+                }
             } else if (connection === 'open') {
                 if (config.mongoose.enabled) {
                     let alreadyThere = await Chat.findOne({
@@ -131,33 +164,16 @@ class WhatsAppInstance {
                     }
                 }
                 this.instance.online = true
-                if (
-                    [
-                        'all',
-                        'connection',
-                        'connection.update',
-                        'connection:open',
-                    ].some((e) => config.webhookAllowedEvents.includes(e))
-                )
-                    await this.SendWebhook(
-                        'connection',
-                        {
-                            connection: connection,
-                        },
-                        this.key
-                    )
+                await this.callWebhook('connection', { connection: connection });
             }
 
             if (qr) {
-                QRCode.toDataURL(qr).then((url) => {
+                QRCode.toDataURL(qr).then(async (url) => {
+                    await this.callWebhook('connection:qr', { qr: url });
                     this.instance.qr = url
                     this.instance.qrRetry++
                     if (this.instance.qrRetry >= config.instance.maxRetryQr) {
-                        // close WebSocket connection
-                        this.instance.sock.ws.close()
-                        // remove all events
-                        this.instance.sock.ev.removeAllListeners()
-                        this.instance.qr = ' '
+                        await this.destroy();
                         logger.info('socket connection terminated')
                     }
                 })
