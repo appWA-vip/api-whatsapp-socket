@@ -39,6 +39,8 @@ module.exports = async function parseMessage(m, type, key) {
     } else if (m.key.fromMe && type === 'notify') {
         data.pushName = 'unamed';
         data.owner = 'another-device';
+    } else {
+        return null;
     }
 
     if (config.webhookSendMedia) {

@@ -285,6 +285,7 @@ class WhatsAppInstance {
                 if (msg.key.participant !== undefined) return;
                 if (JSON.stringify(msg).includes('Invalid PreKey ID')) return;
                 const message = await parseMessage(msg, m.type, this.key);
+                if (!message) return;
 
                 const webhookData = {
                     key: this.key,
