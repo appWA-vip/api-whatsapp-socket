@@ -1,17 +1,17 @@
-FROM node:19-alpine
+FROM node:18.12.1-alpine
 
-ARG _WORKDIR=/home/node/app
-ARG PORT=3333
+RUN apk add --no-cache git
 
-USER root
-RUN apk add git
+RUN npm install -g pnpm
 
-WORKDIR ${_WORKDIR}
+WORKDIR /usr/src/app
 
-ADD . ${_WORKDIR}
-RUN yarn install
+COPY package*.json ./
 
-USER node
-EXPOSE ${PORT}
+COPY . .
 
-CMD yarn start
+RUN pnpm install
+
+EXPOSE 3333
+
+CMD ["pnpm", "start"]
