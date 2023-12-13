@@ -19,6 +19,7 @@ const Contacts = require('../models/contacts.model')
 const useMongoDBAuthState = require('../helper/mongoAuthState')
 const sleep = require('../helper/sleep')
 const parseMessage = require('../helper/parseMessage')
+const NodeCache = require('node-cache');
 
 class WhatsAppInstance {
     socketConfig = {
@@ -102,6 +103,7 @@ class WhatsAppInstance {
         this.socketConfig.auth = this.authState.state
         this.socketConfig.browser = Object.values(config.browser)
         //this.socketConfig.browser = Browsers.macOS('Desktop')
+        this.socketConfig.msgRetryCounterCache = new NodeCache()
         this.instance.sock = makeWASocket(this.socketConfig)
         this.setHandler()
         return this
