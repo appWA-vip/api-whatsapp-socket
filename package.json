@@ -1,9 +1,10 @@
 {
     "name": "whatsapp-api-nodejs",
-    "version": "3.0.8",
+    "version": "0.0.1",
     "description": "whatsapp-api-nodejs is builton top of Baileys-MD.",
     "main": "server.js",
     "scripts": {
+        "build:digitalocean": "npm install",
         "start": "node src/server.js",
         "dev": "nodemon",
         "format:check": "prettier --check .",
@@ -28,8 +29,8 @@
             "git add"
         ]
     },
-    "repository": "git@github.com:salman0ansari/whatsapp-api-nodejs.git",
-    "author": "Mohd Salman Ansari <salman0ansariii@gmail.com>",
+    "repository": "git@github.com:appWA-vip/api-whatsapp-socket.git",
+    "author": "Miguel Lomeli <lomelidev@gmail.com>",
     "license": "MIT",
     "dependencies": {
         "@adiwajshing/keyed-db": "^0.2.4",
@@ -59,5 +60,8 @@
         "nodemon": "^3.0.2",
         "prettier": "^3.1.1",
         "supertest": "^6.3.1"
+    },
+    "engines": {
+        "node": "18.12.1"
     }
 }
