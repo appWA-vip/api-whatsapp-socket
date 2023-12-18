@@ -1,10 +1,6 @@
 const mongoose = require('mongoose')
 
 const contactSchema = new mongoose.Schema({
-    instance_key: {
-        type: String,
-        default: ''
-    },
     phone: {
         type: String,
         default: ''
@@ -31,6 +27,6 @@ const contactSchema = new mongoose.Schema({
     },
 })
 
-contactSchema.index({ instance_key: 1, phone: 1 });
+contactSchema.index({ phone: 1 });
 
 module.exports = contactSchema
