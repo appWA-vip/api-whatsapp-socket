@@ -1,17 +1,13 @@
 function checkInstance(req, res, next) {
-    const key = req.query['key']?.toString()
+    const key = req.query['key']?.toString();
     if (!key) {
-        return res
-            .status(403)
-            .send({ error: true, message: 'no key query was present' })
+        return res.status(403).send({ error: true, message: 'no key query was present' });
     }
-    const instance = WhatsAppInstances[key]
+    const instance = WhatsAppInstances[key];
     if (instance) {
-        return res
-            .status(403)
-            .send({ error: true, message: 'invalid key exist' })
+        return res.status(403).send({ error: true, message: 'invalid key exist' });
     }
-    next()
+    next();
 }
 
-module.exports = checkInstance
+module.exports = checkInstance;

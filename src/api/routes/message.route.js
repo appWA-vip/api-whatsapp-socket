@@ -20,7 +20,7 @@ router.route('/contact').post(keyVerify, loginVerify, presenceCheck, controller.
 router.route('/list').post(keyVerify, loginVerify, presenceCheck, controller.List);
 router.route('/setstatus').put(keyVerify, loginVerify, presenceCheck, controller.SetStatus);
 router.route('/mediabutton').post(keyVerify, loginVerify, presenceCheck, controller.MediaButton);
-router.route("/read").post(keyVerify, loginVerify, presenceCheck, controller.Read);
-router.route("/react").post(keyVerify, loginVerify, presenceCheck, controller.React);
+router.route('/read').post(keyVerify, loginVerify, presenceCheck, controller.Read);
+router.route('/react').post(keyVerify, loginVerify, presenceCheck, controller.React);
 
 module.exports = router;

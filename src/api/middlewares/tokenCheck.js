@@ -1,21 +1,19 @@
-const config = require('../../config/config')
+const config = require('../../config/config');
 
 function tokenVerification(req, res, next) {
-    const bearer = req.headers.authorization
-    const token = bearer?.slice(7)?.toString()
+    const bearer = req.headers.authorization;
+    const token = bearer?.slice(7)?.toString();
     if (!token) {
         return res.status(403).send({
             error: true,
-            message: 'no bearer token header was present',
-        })
+            message: 'no bearer token header was present'
+        });
     }
 
     if (config.token !== token) {
-        return res
-            .status(403)
-            .send({ error: true, message: 'invalid bearer token supplied' })
+        return res.status(403).send({ error: true, message: 'invalid bearer token supplied' });
     }
-    next()
+    next();
 }
 
-module.exports = tokenVerification
+module.exports = tokenVerification;

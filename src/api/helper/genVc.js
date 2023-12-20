@@ -5,7 +5,7 @@ module.exports = function generateVC(data) {
         `FN:${data.fullName}\n` +
         `ORG:${data.organization};\n` +
         `TEL;type=CELL;type=VOICE;waid=${data.phoneNumber}:${data.phoneNumber}\n` +
-        'END:VCARD'
+        'END:VCARD';
 
-    return result
-}
+    return result;
+};

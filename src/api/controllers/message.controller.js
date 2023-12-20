@@ -3,9 +3,9 @@ exports.Text = async (req, res) => {
         req.body.id,
         req.body.message,
         req
-    )
-    return res.status(201).json({ error: false, data: data })
-}
+    );
+    return res.status(201).json({ error: false, data: data });
+};
 
 exports.Image = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].sendMediaFile(
@@ -13,10 +13,10 @@ exports.Image = async (req, res) => {
         req.body.id,
         req.file,
         'image',
-        req.body?.caption,
-    )
-    return res.status(201).json({ error: false, data: data })
-}
+        req.body?.caption
+    );
+    return res.status(201).json({ error: false, data: data });
+};
 
 exports.Video = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].sendMediaFile(
@@ -25,9 +25,9 @@ exports.Video = async (req, res) => {
         req.file,
         'video',
         req.body?.caption
-    )
-    return res.status(201).json({ error: false, data: data })
-}
+    );
+    return res.status(201).json({ error: false, data: data });
+};
 
 exports.Audio = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].sendMediaFile(
@@ -35,9 +35,9 @@ exports.Audio = async (req, res) => {
         req.body.id,
         req.file,
         'audio'
-    )
-    return res.status(201).json({ error: false, data: data })
-}
+    );
+    return res.status(201).json({ error: false, data: data });
+};
 
 exports.Document = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].sendMediaFile(
@@ -47,9 +47,9 @@ exports.Document = async (req, res) => {
         'document',
         '',
         req.body.filename
-    )
-    return res.status(201).json({ error: false, data: data })
-}
+    );
+    return res.status(201).json({ error: false, data: data });
+};
 
 exports.Mediaurl = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].sendUrlMediaFile(
@@ -59,9 +59,9 @@ exports.Mediaurl = async (req, res) => {
         req.body.type, // Types are [image, video, audio, document]
         req.body.mimetype, // mimeType of mediaFile / Check Common mimetypes in `https://mzl.la/3si3and`
         req.body.caption
-    )
-    return res.status(201).json({ error: false, data: data })
-}
+    );
+    return res.status(201).json({ error: false, data: data });
+};
 
 exports.Button = async (req, res) => {
     // console.log(res.body)
@@ -69,66 +69,60 @@ exports.Button = async (req, res) => {
         req,
         req.body.id,
         req.body.btndata
-    )
-    return res.status(201).json({ error: false, data: data })
-}
+    );
+    return res.status(201).json({ error: false, data: data });
+};
 
 exports.Contact = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].sendContactMessage(
         req,
         req.body.id,
         req.body.vcard
-    )
-    return res.status(201).json({ error: false, data: data })
-}
+    );
+    return res.status(201).json({ error: false, data: data });
+};
 
 exports.List = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].sendListMessage(
         req,
         req.body.id,
         req.body.msgdata
-    )
-    return res.status(201).json({ error: false, data: data })
-}
+    );
+    return res.status(201).json({ error: false, data: data });
+};
 
 exports.MediaButton = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].sendMediaButtonMessage(
         req,
         req.body.id,
         req.body.btndata
-    )
-    return res.status(201).json({ error: false, data: data })
-}
+    );
+    return res.status(201).json({ error: false, data: data });
+};
 
 exports.SetStatus = async (req, res) => {
-    const presenceList = [
-        'unavailable',
-        'available',
-        'composing',
-        'recording',
-        'paused',
-    ]
+    const presenceList = ['unavailable', 'available', 'composing', 'recording', 'paused'];
     if (presenceList.indexOf(req.body.status) === -1) {
         return res.status(400).json({
             error: true,
-            message:
-                'status parameter must be one of ' + presenceList.join(', '),
-        })
+            message: 'status parameter must be one of ' + presenceList.join(', ')
+        });
     }
 
-    const data = await WhatsAppInstances[req.query.key]?.setStatus(
-        req.body.status,
-        req.body.id
-    )
-    return res.status(201).json({ error: false, data: data })
-}
+    const data = await WhatsAppInstances[req.query.key]?.setStatus(req.body.status, req.body.id);
+    return res.status(201).json({ error: false, data: data });
+};
 
 exports.Read = async (req, res) => {
-    const data = await WhatsAppInstances[req.query.key].readMessage(req.body.msg)
-    return res.status(201).json({ error: false, data: data })
-}
+    const data = await WhatsAppInstances[req.query.key].readMessage(req.body.msg);
+    return res.status(201).json({ error: false, data: data });
+};
 
 exports.React = async (req, res) => {
-    const data = await WhatsAppInstances[req.query.key].reactMessage(req.body.id, req.body.key, req.body.emoji)
-    return res.status(201).json({ error: false, data: data })
-}
+    const data = await WhatsAppInstances[req.query.key].reactMessage(
+        req.body.id,
+        req.body.key,
+        req.body.emoji
+    );
+    return res.status(201).json({ error: false, data: data });
+};

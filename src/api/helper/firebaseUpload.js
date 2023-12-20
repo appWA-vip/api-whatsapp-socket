@@ -1,4 +1,4 @@
-const { getDownloadURL, getStorage, ref, uploadString } = require('firebase/storage')
+const { getDownloadURL, getStorage, ref, uploadString } = require('firebase/storage');
 
 module.exports = async function uploadFirebase(buffer, mimetype) {
     try {
@@ -11,9 +11,9 @@ module.exports = async function uploadFirebase(buffer, mimetype) {
         const downloadURL = await getDownloadURL(snapshot.ref);
         return downloadURL;
     } catch (e) {
-        return "";
+        return '';
     }
-}
+};
 
 function randomText(length) {
     let result = '';

@@ -1,17 +1,17 @@
-const { downloadContentFromMessage } = require('@whiskeysockets/baileys')
+const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
 
 module.exports = async function downloadMessage(msg, msgType, media) {
     if (media === '' || media === undefined || media === null) {
         return '';
     }
-    let buffer = Buffer.from([])
+    let buffer = Buffer.from([]);
     try {
-        const stream = await downloadContentFromMessage(msg, msgType)
+        const stream = await downloadContentFromMessage(msg, msgType);
         for await (const chunk of stream) {
-            buffer = Buffer.concat([buffer, chunk])
+            buffer = Buffer.concat([buffer, chunk]);
         }
     } catch (e) {
-        return "";
+        return '';
     }
-    return buffer.toString('base64')
-}
+    return buffer.toString('base64');
+};

@@ -1,17 +1,13 @@
 function keyVerification(req, res, next) {
-    const key = req.query['key']?.toString()
+    const key = req.query['key']?.toString();
     if (!key) {
-        return res
-            .status(403)
-            .send({ error: true, message: 'no key query was present' })
+        return res.status(403).send({ error: true, message: 'no key query was present' });
     }
-    const instance = WhatsAppInstances[key]
+    const instance = WhatsAppInstances[key];
     if (!instance) {
-        return res
-            .status(403)
-            .send({ error: true, message: 'invalid key supplied' })
+        return res.status(403).send({ error: true, message: 'invalid key supplied' });
     }
-    next()
+    next();
 }
 
-module.exports = keyVerification
+module.exports = keyVerification;

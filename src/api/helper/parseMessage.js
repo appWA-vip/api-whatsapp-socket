@@ -1,8 +1,7 @@
-const config = require("../../config/config");
-const Contacts = require("../models/contacts.model");
-const downloadMessage = require('./downloadMsg')
-const uploadFirebase = require('./firebaseUpload')
-
+const config = require('../../config/config');
+const Contacts = require('../models/contacts.model');
+const downloadMessage = require('./downloadMsg');
+const uploadFirebase = require('./firebaseUpload');
 
 module.exports = async function parseMessage(m, type, key) {
     let id = String(m.key.id);
@@ -10,10 +9,14 @@ module.exports = async function parseMessage(m, type, key) {
     let phone = String(m.key.remoteJid).replace('@s.whatsapp.net', '');
     let pushName = String(m.pushName);
     let messageTimestamp = Number(m.messageTimestamp);
-    let nameContact = "";
+    let nameContact = '';
 
     const message = extractDataMessage(m.message);
     if (!message) {
+        return null;
+    }
+
+    if (!message.type) {
         return null;
     }
 
@@ -44,22 +47,25 @@ module.exports = async function parseMessage(m, type, key) {
     }
 
     if (config.webhookSendMedia) {
-        if (data.type === "imageMessage") {
+        if (data.type === 'imageMessage') {
             data.media = await downloadMessage(m.message.imageMessage, 'image', data.media);
-        } else if (data.type === "videoMessage") {
+        } else if (data.type === 'videoMessage') {
             data.media = await downloadMessage(m.message.videoMessage, 'video', data.media);
-        } else if (data.type === "audioMessage") {
+        } else if (data.type === 'audioMessage') {
             data.media = await downloadMessage(m.message.audioMessage, 'audio', data.media);
-        } else if (data.type === "documentMessage") {
+        } else if (data.type === 'documentMessage') {
             data.media = await downloadMessage(m.message.documentMessage, 'document', data.media);
         }
-        if (config.webhookTypeMedia === "firebase" && data.media !== "") {
+        if (config.webhookTypeMedia === 'firebase' && data.media !== '') {
             data.media = await uploadFirebase(data.media, data.type);
         }
     }
 
     if (config.mongoose.enabled) {
-        const doc = await Contacts.findOne({ key, 'contacts.phone': remoteJid }, { 'contacts.$': 1 });
+        const doc = await Contacts.findOne(
+            { key, 'contacts.phone': remoteJid },
+            { 'contacts.$': 1 }
+        );
         if (doc && doc.contacts && doc.contacts.length > 0) {
             const contactFound = doc.contacts[0];
             if (contactFound.name !== null && contactFound.name !== '') {
@@ -75,9 +81,7 @@ module.exports = async function parseMessage(m, type, key) {
     //console.log('Data Message parseMessage', data);
 
     return data;
-
-}
-
+};
 
 function extractDataMessage(m) {
     let type = '';

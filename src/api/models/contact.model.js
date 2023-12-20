@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
 const contactSchema = new mongoose.Schema({
     phone: {
@@ -24,9 +24,9 @@ const contactSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    },
-})
+    }
+});
 
 contactSchema.index({ phone: 1 });
 
-module.exports = contactSchema
+module.exports = contactSchema;
