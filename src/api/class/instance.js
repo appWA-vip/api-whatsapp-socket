@@ -294,7 +294,7 @@ class WhatsAppInstance {
                     ...message
                 };
 
-                console.log('webhookData', webhookData);
+                logger.debug({ UPSERT: 'webhookData', ...webhookData });
 
                 await this.callWebhook('message', webhookData);
             });
