@@ -2,8 +2,9 @@ const config = require('../../config/config');
 const Contacts = require('../models/contacts.model');
 const downloadMessage = require('./downloadMsg');
 const uploadFirebase = require('./firebaseUpload');
+const uploadDo = require('./doUpload');
 
-module.exports = async function parseMessage(m, type, key) {
+module.exports = async function parseMessage(m, type, key, sock) {
     let id = String(m.key.id);
     let remoteJid = String(m.key.remoteJid);
     let phone = String(m.key.remoteJid).replace('@s.whatsapp.net', '');
@@ -48,16 +49,20 @@ module.exports = async function parseMessage(m, type, key) {
 
     if (config.webhookSendMedia) {
         if (data.type === 'imageMessage') {
-            data.media = await downloadMessage(m.message.imageMessage, 'image', data.media);
+            data.media = await downloadMessage(m, 'image', data.media, sock);
         } else if (data.type === 'videoMessage') {
-            data.media = await downloadMessage(m.message.videoMessage, 'video', data.media);
+            data.media = await downloadMessage(m, 'video', data.media, sock);
         } else if (data.type === 'audioMessage') {
-            data.media = await downloadMessage(m.message.audioMessage, 'audio', data.media);
+            data.media = await downloadMessage(m, 'audio', data.media, sock);
         } else if (data.type === 'documentMessage') {
-            data.media = await downloadMessage(m.message.documentMessage, 'document', data.media);
+            data.media = await downloadMessage(m, 'document', data.media, sock);
         }
+
         if (config.webhookTypeMedia === 'firebase' && data.media !== '') {
-            data.media = await uploadFirebase(data.media, data.type);
+            data.media = await uploadFirebase(data.media, data.mimetype);
+        }
+        if (config.webhookTypeMedia === 'do' && data.media !== '') {
+            data.media = await uploadDo(data.media, data.mimetype);
         }
     }
 
@@ -78,7 +83,7 @@ module.exports = async function parseMessage(m, type, key) {
         }
     }
 
-    //console.log('Data Message parseMessage', data);
+    // console.log('Data Message parseMessage', data);
 
     return data;
 };

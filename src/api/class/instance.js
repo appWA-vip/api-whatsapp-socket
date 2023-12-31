@@ -13,7 +13,6 @@ const generateVC = require('../helper/genVc');
 const Chat = require('../models/chat.model');
 const axios = require('axios');
 const config = require('../../config/config');
-const downloadMessage = require('../helper/downloadMsg');
 const logger = require('pino')();
 const Contacts = require('../models/contacts.model');
 const useMongoDBAuthState = require('../helper/mongoAuthState');
@@ -292,7 +291,7 @@ class WhatsAppInstance {
                 if (!msg.message) return;
                 if (msg.key.participant !== undefined) return;
                 if (JSON.stringify(msg).includes('Invalid PreKey ID')) return;
-                const message = await parseMessage(msg, m.type, this.key);
+                const message = await parseMessage(msg, m.type, this.key, sock);
                 if (!message) return;
 
                 const webhookData = {

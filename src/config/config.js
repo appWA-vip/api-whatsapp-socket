@@ -91,5 +91,12 @@ module.exports = {
         appId: process.env.FIREBASE_APP_ID || '',
         measurementId: process.env.FIREBASE_MEASUREMENT_ID || ''
     },
+    do: {
+        access_key: process.env.DIGITAL_OCEAN_ACCESS_KEY_ID || '',
+        secret_access_key: process.env.DIGITAL_OCEAN_SECRET_ACCESS_KEY || '',
+        endpoint: process.env.DIGITAL_OCEAN_END_POINT || '',
+        bucket: process.env.DIGITAL_OCEAN_BUCKET_NAME || '',
+        folder: process.env.DIGITAL_OCEAN_PATH_FOLDER || ''
+    },
     hiddenPresence: HIDDEN_PRESENCE
 };

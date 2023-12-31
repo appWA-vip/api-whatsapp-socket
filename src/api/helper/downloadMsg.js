@@ -1,17 +1,22 @@
-const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
+/* eslint-disable no-undefined */
+const { downloadMediaMessage } = require('@whiskeysockets/baileys');
+const logger = require('pino')();
 
-module.exports = async function downloadMessage(msg, msgType, media) {
+module.exports = async function downloadMessage(message, msgType, media, sock) {
     if (media === '' || media === undefined || media === null) {
         return '';
     }
-    let buffer = Buffer.from([]);
-    try {
-        const stream = await downloadContentFromMessage(msg, msgType);
-        for await (const chunk of stream) {
-            buffer = Buffer.concat([buffer, chunk]);
+
+    const buffer = await downloadMediaMessage(
+        message,
+        'buffer',
+        {},
+        {
+            logger: logger,
+
+            reuploadRequest: sock.updateMediaMessage
         }
-    } catch (e) {
-        return '';
-    }
-    return buffer.toString('base64');
+    );
+
+    return buffer;
 };
