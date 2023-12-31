@@ -49,7 +49,7 @@
         "node-cache": "^5.1.2",
         "pino": "^8.16.1",
         "qrcode": "^1.5.1",
-        "sharp": "^0.33.0",
+        "sharp": "^0.30.5",
         "uuid": "^9.0.0"
     },
     "devDependencies": {
