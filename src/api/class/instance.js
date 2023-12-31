@@ -83,7 +83,8 @@ class WhatsAppInstance {
             .post('', {
                 type,
                 body,
-                instanceKey: key
+                instanceKey: key,
+                server: config.mongoose.sessions
             })
             .catch(() => {});
     }
@@ -217,14 +218,19 @@ class WhatsAppInstance {
 
             if (connection === 'connecting') return;
 
-            if (statusCode === DisconnectReason.loggedOut) {
-                await this.destroy();
-                await this.callWebhook('connection', { connection: connection });
-            }
+            // if (statusCode === DisconnectReason.loggedOut) {
+            //     this.instance.online = false;
+            //     await this.destroy();
+            //     await this.callWebhook('connection', { connection: connection });
+            // }
 
             if (connection === 'close') {
                 if (statusCode !== DisconnectReason.loggedOut) {
                     await this.init();
+                } else {
+                    this.instance.online = false;
+                    await this.destroy();
+                    await this.callWebhook('connection', { connection: connection });
                 }
             } else if (connection === 'open') {
                 await this.initContactsChats(Chat);
@@ -296,7 +302,7 @@ class WhatsAppInstance {
 
                 logger.debug({ UPSERT: 'webhookData', ...webhookData });
 
-                await this.callWebhook('message', webhookData);
+                await this.callWebhook('messages.upsert', webhookData);
             });
         });
 
