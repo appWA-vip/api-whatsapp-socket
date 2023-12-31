@@ -5,7 +5,11 @@
 const QRCode = require('qrcode');
 const pino = require('pino');
 const events = require('events');
-const { default: makeWASocket, DisconnectReason } = require('@whiskeysockets/baileys');
+const {
+    default: makeWASocket,
+    DisconnectReason,
+    fetchLatestBaileysVersion
+} = require('@whiskeysockets/baileys');
 const { unlinkSync } = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const processButton = require('../helper/processbtn');
@@ -104,8 +108,10 @@ class WhatsAppInstance {
         this.authState = { state: state, saveCreds: saveCreds };
         this.socketConfig.auth = this.authState.state;
         this.socketConfig.browser = Object.values(config.browser);
-        //this.socketConfig.browser = Browsers.macOS('Desktop')
         this.socketConfig.msgRetryCounterCache = new NodeCache();
+        const { version, isLatest } = await fetchLatestBaileysVersion();
+        this.socketConfig.version = version;
+        logger.info(`using WA v${version.join('.')}, isLatest: ${isLatest}`);
         this.instance.sock = makeWASocket(this.socketConfig);
         this.setHandler();
         return this;
