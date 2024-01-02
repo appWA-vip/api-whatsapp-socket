@@ -1,7 +1,6 @@
 const config = require('../../config/config');
 const Contacts = require('../models/contacts.model');
 const downloadMessage = require('./downloadMsg');
-const uploadFirebase = require('./firebaseUpload');
 const uploadDo = require('./doUpload');
 
 module.exports = async function parseMessage(m, type, key, sock) {
@@ -58,9 +57,6 @@ module.exports = async function parseMessage(m, type, key, sock) {
             data.media = await downloadMessage(m, 'document', data.media, sock);
         }
 
-        if (config.webhookTypeMedia === 'firebase' && data.media !== '') {
-            data.media = await uploadFirebase(data.media, data.mimetype);
-        }
         if (config.webhookTypeMedia === 'do' && data.media !== '') {
             data.media = await uploadDo(data.media, data.mimetype);
         }

@@ -1,7 +1,7 @@
 # NODE
 node_modules
 # package-lock.json
-yarn.lock
+# yarn.lock
 pnpm-lock.yaml
 
 # APPLICATION
@@ -12,4 +12,4 @@ sessiondata
 .vscode/settings.json
 .idea
 
-yarn.lock
+# yarn.lock
