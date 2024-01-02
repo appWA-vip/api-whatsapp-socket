@@ -65,7 +65,9 @@ class WhatsAppInstance {
         'connection:qr',
         'connection:live',
         'messages',
-        'messages.upsert'
+        'messages.upsert',
+        'call:offer',
+        'call:terminate'
     ];
 
     constructor(key, allowWebhook, webhook) {
@@ -264,12 +266,12 @@ class WhatsAppInstance {
 
         // sending presence
         sock?.ev.on('presence.update', async (json) => {
-            if (
-                ['all', 'presence', 'presence.update'].some((e) =>
-                    config.webhookAllowedEvents.includes(e)
-                )
-            )
-                await this.SendWebhook('presence', json, this.key);
+            // if (
+            //     ['all', 'presence', 'presence.update'].some((e) =>
+            //         config.webhookAllowedEvents.includes(e)
+            //     )
+            // )
+            //     await this.SendWebhook('presence', json, this.key);
         });
 
         sock?.ev.on('contacts.upsert', async (m) => {
@@ -318,44 +320,37 @@ class WhatsAppInstance {
             if (data.content) {
                 if (data.content.find((e) => e.tag === 'offer')) {
                     const content = data.content.find((e) => e.tag === 'offer');
-                    if (
-                        ['all', 'call', 'CB:call', 'call:offer'].some((e) =>
-                            config.webhookAllowedEvents.includes(e)
-                        )
-                    )
-                        await this.SendWebhook(
-                            'call_offer',
-                            {
-                                id: content.attrs['call-id'],
-                                timestamp: parseInt(data.attrs.t),
-                                user: {
-                                    id: data.attrs.from,
-                                    platform: data.attrs.platform,
-                                    platform_version: data.attrs.version
-                                }
-                            },
-                            this.key
-                        );
+
+                    const dataCall = {
+                        key: this.key,
+                        id: content.attrs['call-id'],
+                        timestamp: parseInt(data.attrs.t),
+                        user: {
+                            id: data.attrs.from,
+                            platform: data.attrs.platform,
+                            platform_version: data.attrs.version
+                        }
+                    };
+
+                    logger.debug({ CALL: 'offer', ...dataCall });
+
+                    await this.callWebhook('call:offer', dataCall);
                 } else if (data.content.find((e) => e.tag === 'terminate')) {
                     const content = data.content.find((e) => e.tag === 'terminate');
 
-                    if (
-                        ['all', 'call', 'call:terminate'].some((e) =>
-                            config.webhookAllowedEvents.includes(e)
-                        )
-                    )
-                        await this.SendWebhook(
-                            'call_terminate',
-                            {
-                                id: content.attrs['call-id'],
-                                user: {
-                                    id: data.attrs.from
-                                },
-                                timestamp: parseInt(data.attrs.t),
-                                reason: data.content[0].attrs.reason
-                            },
-                            this.key
-                        );
+                    const dataCall = {
+                        key: this.key,
+                        id: content.attrs['call-id'],
+                        user: {
+                            id: data.attrs.from
+                        },
+                        timestamp: parseInt(data.attrs.t),
+                        reason: data.content[0].attrs.reason
+                    };
+
+                    logger.debug({ CALL: 'terminate', ...dataCall });
+
+                    await this.callWebhook('call:terminate', dataCall);
                 }
             }
         });
@@ -363,55 +358,55 @@ class WhatsAppInstance {
         sock?.ev.on('groups.upsert', async (newChat) => {
             //console.log('groups.upsert')
             //console.log(newChat)
-            this.createGroupByApp(newChat);
-            if (
-                ['all', 'groups', 'groups.upsert'].some((e) =>
-                    config.webhookAllowedEvents.includes(e)
-                )
-            )
-                await this.SendWebhook(
-                    'group_created',
-                    {
-                        data: newChat
-                    },
-                    this.key
-                );
+            // this.createGroupByApp(newChat);
+            // if (
+            //     ['all', 'groups', 'groups.upsert'].some((e) =>
+            //         config.webhookAllowedEvents.includes(e)
+            //     )
+            // )
+            //     await this.SendWebhook(
+            //         'group_created',
+            //         {
+            //             data: newChat
+            //         },
+            //         this.key
+            //     );
         });
 
         sock?.ev.on('groups.update', async (newChat) => {
             //console.log('groups.update')
             //console.log(newChat)
-            this.updateGroupSubjectByApp(newChat);
-            if (
-                ['all', 'groups', 'groups.update'].some((e) =>
-                    config.webhookAllowedEvents.includes(e)
-                )
-            )
-                await this.SendWebhook(
-                    'group_updated',
-                    {
-                        data: newChat
-                    },
-                    this.key
-                );
+            // this.updateGroupSubjectByApp(newChat);
+            // if (
+            //     ['all', 'groups', 'groups.update'].some((e) =>
+            //         config.webhookAllowedEvents.includes(e)
+            //     )
+            // )
+            //     await this.SendWebhook(
+            //         'group_updated',
+            //         {
+            //             data: newChat
+            //         },
+            //         this.key
+            //     );
         });
 
         sock?.ev.on('group-participants.update', async (newChat) => {
             //console.log('group-participants.update')
             //console.log(newChat)
             this.updateGroupParticipantsByApp(newChat);
-            if (
-                ['all', 'groups', 'group_participants', 'group-participants.update'].some((e) =>
-                    config.webhookAllowedEvents.includes(e)
-                )
-            )
-                await this.SendWebhook(
-                    'group_participants_updated',
-                    {
-                        data: newChat
-                    },
-                    this.key
-                );
+            // if (
+            //     ['all', 'groups', 'group_participants', 'group-participants.update'].some((e) =>
+            //         config.webhookAllowedEvents.includes(e)
+            //     )
+            // )
+            //     await this.SendWebhook(
+            //         'group_participants_updated',
+            //         {
+            //             data: newChat
+            //         },
+            //         this.key
+            //     );
         });
     }
 
