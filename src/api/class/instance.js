@@ -59,6 +59,7 @@ class WhatsAppInstance {
     hooks = [
         'all',
         'connection',
+        'connection:close',
         'connection.update',
         'connection:open',
         'connection:qr',
@@ -235,14 +236,16 @@ class WhatsAppInstance {
                 } else {
                     this.instance.online = false;
                     await this.destroy();
-                    await this.callWebhook('connection', { connection: connection });
+                    await this.callWebhook('connection:close', { connection: connection });
                 }
             } else if (connection === 'open') {
                 await this.initContactsChats(Chat);
                 await this.initContactsChats(Contacts);
                 this.instance.online = true;
-                await this.callWebhook('connection', { connection: connection });
-                this.instance.em.emit('connection:live');
+                await this.callWebhook('connection:open', { connection: connection });
+                setTimeout(() => {
+                    this.instance.em.emit('connection:live');
+                }, 8000);
                 this.instance.em.emit('send:presence');
             }
 
