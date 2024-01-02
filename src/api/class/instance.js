@@ -327,6 +327,7 @@ class WhatsAppInstance {
                         timestamp: parseInt(data.attrs.t),
                         user: {
                             id: data.attrs.from,
+                            phone: data.attrs.from.replace('@s.whatsapp.net', ''),
                             platform: data.attrs.platform,
                             platform_version: data.attrs.version
                         }
@@ -342,7 +343,8 @@ class WhatsAppInstance {
                         key: this.key,
                         id: content.attrs['call-id'],
                         user: {
-                            id: data.attrs.from
+                            id: data.attrs.from,
+                            phone: data.attrs.from.replace('@s.whatsapp.net', '')
                         },
                         timestamp: parseInt(data.attrs.t),
                         reason: data.content[0].attrs.reason
