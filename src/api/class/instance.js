@@ -566,6 +566,27 @@ class WhatsAppInstance {
         return result;
     }
 
+    async sendLocationMessage(req, to, data) {
+        const jid = await this.verifyId(this.getWhatsAppId(to));
+        await this.sendMessageWTyping(
+            jid,
+            'composing',
+            req.body.presence,
+            req.body.subscribe,
+            req.body.update
+        );
+
+        const result = await this.instance.sock?.sendMessage(jid, {
+            location: {
+                degreesLatitude: data.lat,
+                degreesLongitude: data.lng,
+                name: data.name ?? '',
+                address: data.address ?? ''
+            }
+        });
+        return result;
+    }
+
     async sendListMessage(req, to, data) {
         const jid = await this.verifyId(this.getWhatsAppId(to));
         await this.sendMessageWTyping(

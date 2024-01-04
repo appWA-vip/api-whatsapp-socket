@@ -17,6 +17,7 @@ router.route('/doc').post(keyVerify, loginVerify, upload, presenceCheck, control
 router.route('/mediaurl').post(keyVerify, loginVerify, presenceCheck, controller.Mediaurl);
 router.route('/button').post(keyVerify, loginVerify, presenceCheck, controller.Button);
 router.route('/contact').post(keyVerify, loginVerify, presenceCheck, controller.Contact);
+router.route('/location').post(keyVerify, loginVerify, presenceCheck, controller.Location);
 router.route('/list').post(keyVerify, loginVerify, presenceCheck, controller.List);
 router.route('/setstatus').put(keyVerify, loginVerify, presenceCheck, controller.SetStatus);
 router.route('/mediabutton').post(keyVerify, loginVerify, presenceCheck, controller.MediaButton);

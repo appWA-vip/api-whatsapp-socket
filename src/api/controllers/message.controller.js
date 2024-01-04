@@ -82,6 +82,15 @@ exports.Contact = async (req, res) => {
     return res.status(201).json({ error: false, data: data });
 };
 
+exports.Location = async (req, res) => {
+    const data = await WhatsAppInstances[req.query.key].sendLocationMessage(
+        req,
+        req.body.id,
+        req.body.location
+    );
+    return res.status(201).json({ error: false, data: data });
+};
+
 exports.List = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].sendListMessage(
         req,
