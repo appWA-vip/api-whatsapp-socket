@@ -104,8 +104,18 @@ class WhatsAppInstance {
             await mongoClient.db(config.mongoose.sessions).createCollection(this.key);
     }
 
+    async delay(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
     async init() {
         await this.ensureCollectionExists();
+
+        const _timeStart = 50;
+        const _timeEnd = 150;
+        const _random = Math.floor(Math.random() * (_timeEnd - _timeStart + 1)) + _timeStart;
+        await this.delay(_random);
+
         this.collection = mongoClient.db(config.mongoose.sessions).collection(this.key);
         const { state, saveCreds } = await useMongoDBAuthState({ collection: this.collection });
         this.authState = { state: state, saveCreds: saveCreds };
