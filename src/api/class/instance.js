@@ -73,6 +73,7 @@ class WhatsAppInstance {
         'connection:live',
         'connection:ban',
         'connection:restart',
+        'connection:qr:end',
         'messages',
         'messages.upsert',
         'call:offer',
@@ -180,6 +181,7 @@ class WhatsAppInstance {
             } else if (type === 'removeAllListeners') {
                 this.instance.sock.ev.removeAllListeners();
                 this.instance.em.removeAllListeners();
+                this.instance.sock.ev.removeAllListeners('connection.update');
             } else if (type === 'logout') {
                 await this.instance.sock.logout();
             } else if (type === 'delete') {
@@ -200,8 +202,8 @@ class WhatsAppInstance {
 
     async destroy() {
         const _this = this;
-        await this.remove('close');
         await this.remove('removeAllListeners');
+        await this.remove('close');
         await this.remove('logout');
         await this.remove('session');
         await this.remove('chats');
@@ -311,13 +313,13 @@ class WhatsAppInstance {
                 if (statusCode === 403) {
                     await this.removeListener();
                     await this.destroy();
-                    await this.callWebhook('connection:ban', { connection: connection });
+                    await this.callWebhook('connection:ban', { connection, statusCode });
                 }
 
                 // Restart
                 if (statusCode !== DisconnectReason.loggedOut) {
                     await this.removeListener();
-                    await this.callWebhook('connection:restart', { connection: connection });
+                    await this.callWebhook('connection:restart', { connection, statusCode });
                     setTimeout(async () => await this.init(), 3000);
                 }
 
@@ -325,7 +327,7 @@ class WhatsAppInstance {
                 if (statusCode === DisconnectReason.loggedOut) {
                     await this.removeListener();
                     await this.destroy();
-                    await this.callWebhook('connection:close', { connection: connection });
+                    await this.callWebhook('connection:close', { connection, statusCode });
                 }
             } else if (connection === 'open') {
                 await this.initContactsChats(Chat);
@@ -339,15 +341,17 @@ class WhatsAppInstance {
             }
 
             if (qr) {
-                QRCode.toDataURL(qr).then(async (url) => {
-                    await this.callWebhook('connection:qr', { qr: url });
-                    this.instance.qr = url;
-                    this.instance.qrRetry++;
-                    if (this.instance.qrRetry >= config.instance.maxRetryQr) {
-                        await this.destroy();
-                        logger.info('socket connection terminated');
-                    }
-                });
+                if (this.instance.qrRetry >= config.instance.maxRetryQr) {
+                    await this.destroy();
+                    logger.debug('socket connection terminated');
+                    await this.callWebhook('connection:qr:end', { qrRetry: this.instance.qrRetry });
+                } else {
+                    QRCode.toDataURL(qr).then(async (url) => {
+                        await this.callWebhook('connection:qr', { qr: url });
+                        this.instance.qr = url;
+                        this.instance.qrRetry++;
+                    });
+                }
             }
         });
 
