@@ -8,7 +8,8 @@ const events = require('events');
 const {
     default: makeWASocket,
     DisconnectReason,
-    fetchLatestBaileysVersion
+    fetchLatestBaileysVersion,
+    makeInMemoryStore
 } = require('@whiskeysockets/baileys');
 const { unlinkSync } = require('fs');
 const { v4: uuidv4 } = require('uuid');
@@ -27,6 +28,13 @@ const parseMessage = require('../helper/parseMessage');
 const NodeCache = require('node-cache');
 
 class WhatsAppInstance {
+    store = makeInMemoryStore({
+        logger: pino({
+            level: config.log.level,
+            enabled: config.log.instances
+        })
+    });
+
     socketConfig = {
         keepAliveIntervalMs: 60_000,
         defaultQueryTimeoutMs: undefined,
@@ -38,7 +46,13 @@ class WhatsAppInstance {
         syncFullHistory: false,
         markOnlineOnConnect: false,
         fireInitQueries: false,
-        generateHighQualityLinkPreview: true
+        generateHighQualityLinkPreview: true,
+        getMessage: async (key) => {
+            if (this.store && key.remoteJid && key.id) {
+                const msg = await this.store.loadMessage(key.remoteJid, key.id);
+                return msg?.message || undefined;
+            }
+        }
     };
     key = '';
     name = '';
