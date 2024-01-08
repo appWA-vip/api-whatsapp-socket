@@ -84,6 +84,8 @@ class WhatsAppInstance {
         'connection:open',
         'connection:qr',
         'connection:live',
+        'connection:ban',
+        'connection:restart',
         'messages',
         'messages.upsert',
         'call:offer',
@@ -205,7 +207,14 @@ class WhatsAppInstance {
         await this.remove('contacts');
         await this.remove('names');
         await this.remove('delete');
-        logger.info('Destroy: ' + _this.key);
+        logger.debug('Destroy: ' + _this.key);
+    }
+
+    async removeListener() {
+        const _this = this;
+        this.instance.online = false;
+        await this.remove('removeAllListeners');
+        logger.debug('removeListener: ' + _this.key);
     }
 
     async callWebhook(type, body) {
@@ -292,11 +301,28 @@ class WhatsAppInstance {
 
             if (connection === 'connecting') return;
 
+            logger.debug(
+                `Socket ${this.key} Connection Update ${connection || ''} ${lastDisconnect || ''}`
+            );
+
             if (connection === 'close') {
+                //Ban
+                if (statusCode === 403) {
+                    await this.removeListener();
+                    await this.destroy();
+                    await this.callWebhook('connection:ban', { connection: connection });
+                }
+
+                // Restart
                 if (statusCode !== DisconnectReason.loggedOut) {
-                    await this.init();
-                } else {
-                    this.instance.online = false;
+                    await this.removeListener();
+                    await this.callWebhook('connection:restart', { connection: connection });
+                    setTimeout(async () => await this.init(), 3000);
+                }
+
+                // Logout
+                if (statusCode === DisconnectReason.loggedOut) {
+                    await this.removeListener();
                     await this.destroy();
                     await this.callWebhook('connection:close', { connection: connection });
                 }
