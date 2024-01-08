@@ -244,7 +244,7 @@ class WhatsAppInstance {
 
     setHandler() {
         const sock = this.instance.sock;
-        this;
+
         // on credentials update save state
         sock?.ev.on('creds.update', this.authState.saveCreds);
 
