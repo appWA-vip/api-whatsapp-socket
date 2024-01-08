@@ -1,16 +1,15 @@
 /* eslint-disable no-undef */
 const { WhatsAppInstance } = require('../class/instance');
-const fs = require('fs');
-const path = require('path');
 const config = require('../../config/config');
 const { Session } = require('../class/session');
 
 exports.init = async (req, res) => {
     const key = req.query.key;
+    const name = !req.query.name ? config.browser.platform : req.query.name;
     const webhook = !req.query.webhook ? false : req.query.webhook;
     const webhookUrl = !req.query.webhookUrl ? null : req.query.webhookUrl;
     const appUrl = config.appUrl || req.protocol + '://' + req.headers.host;
-    const instance = new WhatsAppInstance(key, webhook, webhookUrl);
+    const instance = new WhatsAppInstance(key, webhook, webhookUrl, name);
     const data = await instance.init();
     WhatsAppInstances[data.key] = instance;
     res.json({

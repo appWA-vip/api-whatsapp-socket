@@ -48,6 +48,14 @@ const MARK_MESSAGES_READ = !!(
 // Enable or disable presence
 const HIDDEN_PRESENCE = !!(process.env.HIDDEN_PRESENCE && process.env.HIDDEN_PRESENCE === 'true');
 
+// Version whatsapp
+const VERSION_AUTO_FETCH = !!(
+    process.env.VERSION_AUTO_FETCH && process.env.VERSION_AUTO_FETCH === 'true'
+);
+const VERSION_WHATSAPP_1 = process.env.VERSION_WHATSAPP_1 || '2';
+const VERSION_WHATSAPP_2 = process.env.VERSION_WHATSAPP_2 || '2329';
+const VERSION_WHATSAPP_3 = process.env.VERSION_WHATSAPP_3 || '9';
+
 module.exports = {
     port: PORT,
     token: TOKEN,
@@ -68,6 +76,12 @@ module.exports = {
             // useNewUrlParser: true,
             // useUnifiedTopology: true,
         }
+    },
+    version: {
+        auto: VERSION_AUTO_FETCH,
+        path_1: VERSION_WHATSAPP_1,
+        path_2: VERSION_WHATSAPP_2,
+        path_3: VERSION_WHATSAPP_3
     },
     browser: {
         platform: CLIENT_PLATFORM,

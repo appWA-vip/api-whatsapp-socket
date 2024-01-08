@@ -4,6 +4,7 @@
 const { WhatsAppInstance } = require('../class/instance');
 const logger = require('pino')();
 const config = require('../../config/config');
+const Names = require('../models/names.model');
 
 class Session {
     async restoreSessions() {
@@ -19,9 +20,12 @@ class Session {
                 const query = {};
                 await db.collection(key).find(query).toArray();
 
+                let nameBrowser = await Names.findOne({ key }).exec();
+                nameBrowser = !nameBrowser ? config.browser.platform : nameBrowser.name;
+
                 const webhook = !config.webhookEnabled ? undefined : config.webhookEnabled;
                 const webhookUrl = !config.webhookUrl ? undefined : config.webhookUrl;
-                const instance = new WhatsAppInstance(key, webhook, webhookUrl);
+                const instance = new WhatsAppInstance(key, webhook, webhookUrl, nameBrowser);
                 await instance.init();
                 WhatsAppInstances[key] = instance;
 

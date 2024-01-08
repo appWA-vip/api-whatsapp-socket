@@ -19,6 +19,7 @@ const axios = require('axios');
 const config = require('../../config/config');
 const logger = require('pino')();
 const Contacts = require('../models/contacts.model');
+const Names = require('../models/names.model');
 const useMongoDBAuthState = require('../helper/mongoAuthState');
 const sleep = require('../helper/sleep');
 const parseMessage = require('../helper/parseMessage');
@@ -26,6 +27,7 @@ const NodeCache = require('node-cache');
 
 class WhatsAppInstance {
     socketConfig = {
+        keepAliveIntervalMs: 60_000,
         defaultQueryTimeoutMs: undefined,
         printQRInTerminal: false,
         logger: pino({
@@ -37,11 +39,13 @@ class WhatsAppInstance {
         generateHighQualityLinkPreview: true
     };
     key = '';
+    name = '';
     authState;
     allowWebhook = undefined;
     webhook = undefined;
 
     instance = {
+        name: '',
         key: this.key,
         chats: [],
         qr: '',
@@ -70,8 +74,10 @@ class WhatsAppInstance {
         'call:terminate'
     ];
 
-    constructor(key, allowWebhook, webhook) {
+    constructor(key, allowWebhook, webhook, name) {
         this.key = key ? key : uuidv4();
+        this.name = name ? name : config.browser.platform;
+        this.instance.name = this.name;
         this.instance.customWebhook = this.webhook ? this.webhook : webhook;
         this.allowWebhook = config.webhookEnabled ? config.webhookEnabled : allowWebhook;
         if (this.allowWebhook && this.instance.customWebhook !== null) {
@@ -111,8 +117,10 @@ class WhatsAppInstance {
     async init() {
         await this.ensureCollectionExists();
 
-        const _timeStart = 50;
-        const _timeEnd = 150;
+        await this.initNameAgent(Names);
+
+        const _timeStart = 2;
+        const _timeEnd = 5;
         const _random = Math.floor(Math.random() * (_timeEnd - _timeStart + 1)) + _timeStart;
         await this.delay(_random);
 
@@ -120,11 +128,27 @@ class WhatsAppInstance {
         const { state, saveCreds } = await useMongoDBAuthState({ collection: this.collection });
         this.authState = { state: state, saveCreds: saveCreds };
         this.socketConfig.auth = this.authState.state;
-        this.socketConfig.browser = Object.values(config.browser);
+
+        const browser = config.browser;
+        browser.platform = this.name;
+
+        this.socketConfig.browser = Object.values(browser);
         this.socketConfig.msgRetryCounterCache = new NodeCache();
-        const { version, isLatest } = await fetchLatestBaileysVersion();
-        this.socketConfig.version = version;
-        logger.info(`using WA v${version.join('.')}, isLatest: ${isLatest}`);
+
+        if (config.version.auto) {
+            const { version, isLatest } = await fetchLatestBaileysVersion();
+            this.socketConfig.version = version;
+            logger.info(`using WA v${version.join('.')}, isLatest: ${isLatest}`);
+        } else {
+            const versionUser = [
+                config.version.path_1,
+                config.version.path_2,
+                config.version.path_3
+            ];
+            this.socketConfig.version = versionUser;
+            logger.info(`using WA v${versionUser.join('.')}, isLatest: for user`);
+        }
+
         this.instance.sock = makeWASocket(this.socketConfig);
         this.setHandler();
         return this;
@@ -147,6 +171,8 @@ class WhatsAppInstance {
                 await Chat.deleteMany({ key: this.key });
             } else if (type === 'contacts') {
                 await Contacts.deleteMany({ key: this.key });
+            } else if (type === 'names') {
+                await Names.deleteMany({ key: this.key });
             }
         } catch (error) {
             logger.error('ERROR: Removed ' + type);
@@ -161,6 +187,7 @@ class WhatsAppInstance {
         await this.remove('session');
         await this.remove('chats');
         await this.remove('contacts');
+        await this.remove('names');
         await this.remove('delete');
         logger.info('Destroy: ' + _this.key);
     }
@@ -178,6 +205,18 @@ class WhatsAppInstance {
             }).exec();
             if (!alreadyThere) {
                 const save = new Table({ key: this.key });
+                await save.save();
+            }
+        }
+    }
+
+    async initNameAgent(Table) {
+        if (config.mongoose.enabled) {
+            let alreadyThere = await Table.findOne({
+                key: this.key
+            }).exec();
+            if (!alreadyThere) {
+                const save = new Table({ key: this.key, name: this.name });
                 await save.save();
             }
         }
@@ -203,6 +242,7 @@ class WhatsAppInstance {
 
     setHandler() {
         const sock = this.instance.sock;
+        this;
         // on credentials update save state
         sock?.ev.on('creds.update', this.authState.saveCreds);
 
@@ -235,12 +275,6 @@ class WhatsAppInstance {
             const statusCode = lastDisconnect?.error?.output?.statusCode;
 
             if (connection === 'connecting') return;
-
-            // if (statusCode === DisconnectReason.loggedOut) {
-            //     this.instance.online = false;
-            //     await this.destroy();
-            //     await this.callWebhook('connection', { connection: connection });
-            // }
 
             if (connection === 'close') {
                 if (statusCode !== DisconnectReason.loggedOut) {
@@ -312,6 +346,7 @@ class WhatsAppInstance {
                 if (!msg.message) return;
                 if (msg.key.participant !== undefined) return;
                 if (JSON.stringify(msg).includes('Invalid PreKey ID')) return;
+
                 const message = await parseMessage(msg, m.type, this.key, sock);
                 if (!message) return;
 
@@ -448,6 +483,7 @@ class WhatsAppInstance {
 
     async getInstanceDetail(key) {
         return {
+            name: this.instance?.name,
             instance_key: key,
             phone_connected: this.instance?.online,
             webhookUrl: this.instance.customWebhook,
