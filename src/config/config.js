@@ -10,6 +10,10 @@ const RESTORE_SESSIONS_ON_START_UP = !!(
 const APP_URL = process.env.APP_URL || false;
 
 const LOG_LEVEL = process.env.LOG_LEVEL;
+const ENABLE_LOGGING = !!(process.env.ENABLE_LOGGING && process.env.ENABLE_LOGGING === 'true');
+const ENABLE_LOGGING_INSTANCES = !!(
+    process.env.ENABLE_LOGGING_INSTANCES && process.env.ENABLE_LOGGING_INSTANCES === 'true'
+);
 
 const INSTANCE_MAX_RETRY_QR = process.env.INSTANCE_MAX_RETRY_QR || 2;
 
@@ -62,7 +66,9 @@ module.exports = {
     restoreSessionsOnStartup: RESTORE_SESSIONS_ON_START_UP,
     appUrl: APP_URL,
     log: {
-        level: LOG_LEVEL
+        level: LOG_LEVEL,
+        enabled: ENABLE_LOGGING,
+        instances: ENABLE_LOGGING_INSTANCES
     },
     instance: {
         maxRetryQr: INSTANCE_MAX_RETRY_QR

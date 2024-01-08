@@ -17,7 +17,8 @@ const generateVC = require('../helper/genVc');
 const Chat = require('../models/chat.model');
 const axios = require('axios');
 const config = require('../../config/config');
-const logger = require('pino')();
+require('pino')();
+const logger = require('../helper/log');
 const Contacts = require('../models/contacts.model');
 const Names = require('../models/names.model');
 const useMongoDBAuthState = require('../helper/mongoAuthState');
@@ -31,7 +32,8 @@ class WhatsAppInstance {
         defaultQueryTimeoutMs: undefined,
         printQRInTerminal: false,
         logger: pino({
-            level: config.log.level
+            level: config.log.level,
+            enabled: config.log.instances
         }),
         syncFullHistory: true,
         markOnlineOnConnect: false,
@@ -119,8 +121,8 @@ class WhatsAppInstance {
 
         await this.initNameAgent(Names);
 
-        const _timeStart = 2;
-        const _timeEnd = 5;
+        const _timeStart = 1;
+        const _timeEnd = 3;
         const _random = Math.floor(Math.random() * (_timeEnd - _timeStart + 1)) + _timeStart;
         await this.delay(_random);
 
