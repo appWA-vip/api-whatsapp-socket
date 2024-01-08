@@ -28,13 +28,6 @@ const parseMessage = require('../helper/parseMessage');
 const NodeCache = require('node-cache');
 
 class WhatsAppInstance {
-    store = makeInMemoryStore({
-        logger: pino({
-            level: config.log.level,
-            enabled: config.log.instances
-        })
-    });
-
     socketConfig = {
         keepAliveIntervalMs: 60_000,
         defaultQueryTimeoutMs: undefined,
@@ -46,13 +39,7 @@ class WhatsAppInstance {
         syncFullHistory: false,
         markOnlineOnConnect: false,
         fireInitQueries: false,
-        generateHighQualityLinkPreview: true,
-        getMessage: async (key) => {
-            if (this.store && key.remoteJid && key.id) {
-                const msg = await this.store.loadMessage(key.remoteJid, key.id);
-                return msg?.message || undefined;
-            }
-        }
+        generateHighQualityLinkPreview: true
     };
     key = '';
     name = '';
@@ -166,6 +153,20 @@ class WhatsAppInstance {
             this.socketConfig.version = versionUser;
             logger.info(`using WA v${versionUser.join('.')}, isLatest: for user`);
         }
+
+        const store = makeInMemoryStore({
+            logger: pino({
+                level: config.log.level,
+                enabled: config.log.instances
+            })
+        });
+
+        this.socketConfig.getMessage = async (key) => {
+            if (store && key.remoteJid && key.id) {
+                const msg = await store.loadMessage(key.remoteJid, key.id);
+                return msg?.message || undefined;
+            }
+        };
 
         this.instance.sock = makeWASocket(this.socketConfig);
         this.setHandler();
