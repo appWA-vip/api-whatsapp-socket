@@ -9,7 +9,10 @@ const config = require('./config/config');
 const { Session } = require('./api/class/session');
 const connectToCluster = require('./api/helper/connectMongoClient');
 
+const { startCronJobs } = require('./api/crons');
+
 let server;
+let cronjob = false;
 
 if (config.mongoose.enabled) {
     mongoose.set('strictQuery', true);
@@ -26,6 +29,10 @@ server = app.listen(config.port, async () => {
         const session = new Session();
         let restoreSessions = await session.restoreSessions();
         logger.info(`${restoreSessions.length} Session(s) Restored`);
+        if (!cronjob) {
+            startCronJobs();
+            cronjob = true;
+        }
     }
 });
 
