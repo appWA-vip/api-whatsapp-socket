@@ -308,7 +308,7 @@ class WhatsAppInstance {
                 `Socket ${this.key} Connection Update ${connection || ''} ${lastDisconnect || ''}`
             );
 
-            if (connection === 'close') {
+            if (connection === 'close' && statusCode) {
                 //Ban
                 if (statusCode === 403) {
                     await this.removeListener();
