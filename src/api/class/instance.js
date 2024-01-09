@@ -304,10 +304,6 @@ class WhatsAppInstance {
 
             if (connection === 'connecting') return;
 
-            logger.debug(
-                `Socket ${this.key} Connection Update ${connection || ''} ${lastDisconnect || ''}`
-            );
-
             if (connection === 'close' && statusCode) {
                 //Ban
                 if (statusCode === 403) {
@@ -320,7 +316,7 @@ class WhatsAppInstance {
                 if (statusCode !== DisconnectReason.loggedOut) {
                     await this.removeListener();
                     await this.callWebhook('connection:restart', { connection, statusCode });
-                    setTimeout(async () => await this.init(), 3000);
+                    setTimeout(async () => await this.init(), 2000);
                 }
 
                 // Logout
