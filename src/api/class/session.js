@@ -17,6 +17,8 @@ class Session {
                 allCollections.push(collection.name);
             });
             for (const key of allCollections) {
+                if (WhatsAppInstances[key]) continue;
+
                 const query = {};
                 await db.collection(key).find(query).toArray();
 
