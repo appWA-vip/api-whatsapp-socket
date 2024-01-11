@@ -56,7 +56,11 @@ class WhatsAppInstance {
         qrRetry: 0,
         customWebhook: '',
         em: new events.EventEmitter(),
-        presence: false
+        presence: false,
+        counter: 0,
+        validator: 0,
+        presenceTimer: null,
+        presenceLived: null
     };
 
     axiosInstance = axios.create({
@@ -124,6 +128,12 @@ class WhatsAppInstance {
         await this.ensureCollectionExists();
 
         await this.initNameAgent(Names);
+
+        this.instance.counter = 0;
+        this.instance.validator = 10;
+        this.instance.presence = false;
+        this.instance.presenceTimer = null;
+        this.instance.presenceLived = null;
 
         const _timeStart = 1;
         const _timeEnd = 3;
@@ -287,10 +297,31 @@ class WhatsAppInstance {
         // hidden presence
         this.instance.em.on('send:presence', async () => {
             if (!config.hiddenPresence) return;
-            if (this.instance.online && !this.instance.presence) {
+
+            // Validation to be offline
+            if (this.instance.online && this.instance.counter < this.instance.validator) {
                 await this.instance.sock.sendPresenceUpdate('unavailable');
             }
+
+            // Validation to be available
+            if (this.instance.online && this.instance.counter >= this.instance.validator) {
+                await this.instance.sock.sendPresenceUpdate('available');
+                this.instance.presence = false;
+                this.instance.counter = 0;
+            }
+
             if (this.instance.online) {
+                this.instance.counter++;
+
+                logger.info({ validator: this.instance.validator, counter: this.instance.counter });
+
+                // If the counter is larger we connect it
+                if (this.instance.counter >= this.instance.validator) {
+                    this.instance.counter = 99999;
+                    this.instance.validator = Math.floor(Math.random() * (80 - 60) + 60);
+                    await this.instance.sock.sendPresenceUpdate('available');
+                }
+
                 setTimeout(() => {
                     this.instance.em.emit('send:presence');
                 }, 8000);
@@ -443,6 +474,9 @@ class WhatsAppInstance {
         if (!presence) return;
 
         this.instance.presence = true;
+        this.instance.counter = 99999;
+
+        await this.instance.sock.sendPresenceUpdate('available');
 
         await this.instance.sock.presenceSubscribe(jid);
         await sleep(subscribe);
@@ -453,6 +487,7 @@ class WhatsAppInstance {
         await this.instance.sock.sendPresenceUpdate('paused', jid);
 
         this.instance.presence = false;
+        this.instance.counter = 0;
     }
 
     async deleteInstance(key) {
