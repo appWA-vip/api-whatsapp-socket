@@ -52,6 +52,9 @@ const MARK_MESSAGES_READ = !!(
 // Enable or disable presence
 const HIDDEN_PRESENCE = !!(process.env.HIDDEN_PRESENCE && process.env.HIDDEN_PRESENCE === 'true');
 
+// rounds for presence
+const ROUNDS_SESSION_PRESENCE = parseInt(process.env.ROUNDS_SESSION_PRESENCE) || 100;
+
 // Version whatsapp
 const VERSION_AUTO_FETCH = !!(
     process.env.VERSION_AUTO_FETCH && process.env.VERSION_AUTO_FETCH === 'true'
@@ -108,5 +111,6 @@ module.exports = {
         bucket: process.env.DIGITAL_OCEAN_BUCKET_NAME || '',
         folder: process.env.DIGITAL_OCEAN_PATH_FOLDER || ''
     },
-    hiddenPresence: HIDDEN_PRESENCE
+    hiddenPresence: HIDDEN_PRESENCE,
+    roundsPresence: ROUNDS_SESSION_PRESENCE
 };

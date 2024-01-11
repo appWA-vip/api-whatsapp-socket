@@ -130,8 +130,17 @@ class WhatsAppInstance {
         await this.initNameAgent(Names);
 
         this.instance.counter = 0;
-        this.instance.validator = 10;
+        this.instance.validator = this.setValidator(config.roundsPresence);
         this.instance.presence = false;
+
+        if (this.instance.presenceTimer) {
+            clearTimeout(this.instance.presenceTimer);
+        }
+
+        if (this.instance.presenceLived) {
+            clearTimeout(this.instance.presenceLived);
+        }
+
         this.instance.presenceTimer = null;
         this.instance.presenceLived = null;
 
@@ -189,6 +198,14 @@ class WhatsAppInstance {
             if (type === 'close') {
                 this.instance.sock.ws.close();
             } else if (type === 'removeAllListeners') {
+                if (this.instance.presenceTimer) {
+                    clearTimeout(this.instance.presenceTimer);
+                }
+                if (this.instance.presenceLived) {
+                    clearTimeout(this.instance.presenceLived);
+                }
+                this.instance.presenceTimer = null;
+                this.instance.presenceLived = null;
                 this.instance.sock.ev.removeAllListeners();
                 this.instance.em.removeAllListeners();
                 this.instance.sock.ev.removeAllListeners('connection.update');
@@ -278,6 +295,10 @@ class WhatsAppInstance {
         }
     }
 
+    setValidator(x) {
+        return Math.floor(Math.random() * (x + 40 - x) + x);
+    }
+
     setHandler() {
         const sock = this.instance.sock;
 
@@ -288,7 +309,7 @@ class WhatsAppInstance {
         this.instance.em.on('connection:live', async () => {
             if (this.instance.online) {
                 await this.callWebhook('connection:live', { live: true });
-                setTimeout(() => {
+                this.instance.presenceLived = setTimeout(() => {
                     this.instance.em.emit('connection:live');
                 }, 30000);
             }
@@ -313,16 +334,19 @@ class WhatsAppInstance {
             if (this.instance.online) {
                 this.instance.counter++;
 
-                logger.info({ validator: this.instance.validator, counter: this.instance.counter });
+                logger.debug({
+                    validator: this.instance.validator,
+                    counter: this.instance.counter
+                });
 
                 // If the counter is larger we connect it
                 if (this.instance.counter >= this.instance.validator) {
                     this.instance.counter = 99999;
-                    this.instance.validator = Math.floor(Math.random() * (80 - 60) + 60);
+                    this.instance.validator = this.setValidator(config.roundsPresence);
                     await this.instance.sock.sendPresenceUpdate('available');
                 }
 
-                setTimeout(() => {
+                this.instance.presenceTimer = setTimeout(() => {
                     this.instance.em.emit('send:presence');
                 }, 8000);
             }
