@@ -377,10 +377,19 @@ class WhatsAppInstance {
 
         // on socket closed, opened, connecting
         sock?.ev.on('connection.update', async (update) => {
-            const { connection, lastDisconnect, qr } = update;
+            const { connection, lastDisconnect, qr, receivedPendingNotifications } = update;
             const statusCode = lastDisconnect?.error?.output?.statusCode;
 
             if (connection === 'connecting') return;
+
+            // Flush Buffer
+            if (receivedPendingNotifications && !sock.authState.creds?.myAppStateKeyId) {
+                try {
+                    sock?.ev.flush();
+                } catch (error) {
+                    logger.error(`[sock flush error]: ${error}`);
+                }
+            }
 
             if (connection === 'close' && statusCode) {
                 //Ban
