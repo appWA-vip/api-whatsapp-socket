@@ -34,6 +34,9 @@ const WEBHOOK_ENABLED = !!(process.env.WEBHOOK_ENABLED && process.env.WEBHOOK_EN
 // Webhook URL
 const WEBHOOK_URL = process.env.WEBHOOK_URL;
 
+// Webhok url liveat
+const WEBHOOK_LIVE_AT_URL = process.env.WEBHOOK_LIVE_AT_URL;
+
 // Receive message MEDIA IN WEBHOOK
 const WEBHOOK_SEND_MEDIA = !!(
     process.env.WEBHOOK_SEND_MEDIA && process.env.WEBHOOK_SEND_MEDIA === 'true'
@@ -66,11 +69,15 @@ const VERSION_WHATSAPP_3 = process.env.VERSION_WHATSAPP_3 || '9';
 // MS RESTART INSTANCE
 const MS_RESTART_INSTANCE = parseFloat(process.env.MS_RESTART_INSTANCE) || 3600000;
 
+// server id
+const ID_SERVER = process.env.ID_SERVER || null;
+
 module.exports = {
     port: PORT,
     token: TOKEN,
     restoreSessionsOnStartup: RESTORE_SESSIONS_ON_START_UP,
     appUrl: APP_URL,
+    idServer: ID_SERVER,
     log: {
         level: LOG_LEVEL,
         enabled: ENABLE_LOGGING,
@@ -102,6 +109,7 @@ module.exports = {
     },
     webhookEnabled: WEBHOOK_ENABLED,
     webhookUrl: WEBHOOK_URL,
+    webhookLiveAtUrl: WEBHOOK_LIVE_AT_URL,
     webhookSendMedia: WEBHOOK_SEND_MEDIA,
     webhookTypeMedia: WEBHOOK_TYPE_MEDIA,
     protectRoutes: PROTECT_ROUTES,
