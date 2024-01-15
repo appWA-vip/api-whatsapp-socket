@@ -247,6 +247,29 @@ class WhatsAppInstance {
         logger.debug('removeListener: ' + _this.key);
     }
 
+    async stop() {
+        try {
+            const _this = this;
+            this.instance.online = false;
+            await this.remove('removeAllListeners');
+            await this.remove('close');
+            logger.debug('stop: ' + _this.key);
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
+
+    async removeDB() {
+        try {
+            const _this = this;
+            this.instance.online = false;
+            await this.destroy();
+            logger.debug('removeDB: ' + _this.key);
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
+
     async callWebhook(type, body) {
         if (this.hooks.some((e) => config.webhookAllowedEvents.includes(e))) {
             await this.SendWebhook(type, body, this.key);

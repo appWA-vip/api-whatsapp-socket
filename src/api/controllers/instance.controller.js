@@ -140,3 +140,41 @@ exports.list = async (req, res) => {
         data: data
     });
 };
+
+exports.stop = async (req, res) => {
+    let errormsg, error, message;
+    try {
+        await WhatsAppInstances[req.query.key].stop();
+        delete WhatsAppInstances[req.query.key];
+        error = false;
+        message = 'Stopped correctly';
+    } catch (e) {
+        errormsg = e;
+        error = true;
+        message = '';
+    }
+    return res.json({
+        error: error,
+        message: message ? message : null,
+        errormsg: errormsg ? errormsg : null
+    });
+};
+
+exports.remove = async (req, res) => {
+    let errormsg, error, message;
+    try {
+        await WhatsAppInstances[req.query.key].removeDB();
+        delete WhatsAppInstances[req.query.key];
+        error = false;
+        message = 'Remove correctly';
+    } catch (e) {
+        errormsg = e;
+        error = true;
+        message = '';
+    }
+    return res.json({
+        error: error,
+        message: message ? message : null,
+        errormsg: errormsg ? errormsg : null
+    });
+};
