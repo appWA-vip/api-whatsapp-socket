@@ -63,6 +63,9 @@ const VERSION_WHATSAPP_1 = process.env.VERSION_WHATSAPP_1 || '2';
 const VERSION_WHATSAPP_2 = process.env.VERSION_WHATSAPP_2 || '2329';
 const VERSION_WHATSAPP_3 = process.env.VERSION_WHATSAPP_3 || '9';
 
+// MS RESTART INSTANCE
+const MS_RESTART_INSTANCE = parseFloat(process.env.MS_RESTART_INSTANCE) || 3600000;
+
 module.exports = {
     port: PORT,
     token: TOKEN,
@@ -112,5 +115,6 @@ module.exports = {
         folder: process.env.DIGITAL_OCEAN_PATH_FOLDER || ''
     },
     hiddenPresence: HIDDEN_PRESENCE,
-    roundsPresence: ROUNDS_SESSION_PRESENCE
+    roundsPresence: ROUNDS_SESSION_PRESENCE,
+    msRestart: MS_RESTART_INSTANCE
 };
