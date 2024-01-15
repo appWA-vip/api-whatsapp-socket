@@ -60,7 +60,8 @@ class WhatsAppInstance {
         counter: 0,
         validator: 0,
         presenceTimer: null,
-        presenceLived: null
+        presenceLived: null,
+        timeStart: 0
     };
 
     axiosInstance = axios.create({
@@ -132,6 +133,8 @@ class WhatsAppInstance {
         this.instance.counter = 0;
         this.instance.validator = this.setValidator(config.roundsPresence);
         this.instance.presence = false;
+
+        this.instance.timeStart = 0;
 
         if (this.instance.presenceTimer) {
             clearTimeout(this.instance.presenceTimer);
@@ -331,6 +334,16 @@ class WhatsAppInstance {
         // on send live conection
         this.instance.em.on('connection:live', async () => {
             if (this.instance.online) {
+                // instance restart is implemented
+                if (this.instance.timeStart > 0 && config.msRestart > 0) {
+                    if (Date.now() - this.instance.timeStart > config.msRestart) {
+                        logger.debug(`auto-restart`);
+                        await this.removeListener();
+                        await this.callWebhook('connection:auto-restart', {});
+                        setTimeout(async () => await this.init(), 2000);
+                    }
+                }
+
                 await this.callWebhook('connection:live', { live: true });
                 this.instance.presenceLived = setTimeout(() => {
                     this.instance.em.emit('connection:live');
@@ -416,6 +429,7 @@ class WhatsAppInstance {
                 await this.initContactsChats(Chat);
                 await this.initContactsChats(Contacts);
                 this.instance.online = true;
+                this.instance.timeStart = Date.now();
                 await this.callWebhook('connection:open', { connection: connection });
                 setTimeout(() => {
                     this.instance.em.emit('connection:live');
