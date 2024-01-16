@@ -6,11 +6,11 @@ const axios = require('axios');
 const livedCron = async () => {
     try {
         await actionInstances();
-        cron.schedule(`1 * * * *`, async () => {
+        cron.schedule(`0 * * * * *`, async () => {
             await actionInstances();
         });
     } catch (error) {
-        logger.error(`[livedCron]: ${error}`, error);
+        logger.error(`[livedCron]: ${error}`);
     }
 };
 
@@ -36,7 +36,7 @@ const actionInstances = async () => {
 
         logger.debug(`call server liveAt`);
     } catch (error) {
-        logger.error(`[actionInstances]: ${error}`, error);
+        logger.error(`[actionInstances]: ${error}`);
     }
 };
 

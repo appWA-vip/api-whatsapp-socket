@@ -4,11 +4,11 @@ const { Session } = require('../class/session');
 
 const instancesCron = async () => {
     try {
-        cron.schedule(`10 * * * *`, async () => {
+        cron.schedule(`0 */10 * * * *`, async () => {
             await actionInstances();
         });
     } catch (error) {
-        logger.error(`[instancesCron]: ${error}`, error);
+        logger.error(`[instancesCron]: ${error}`);
     }
 };
 
@@ -19,7 +19,7 @@ const actionInstances = async () => {
         let restoreSessions = await session.restoreSessions();
         logger.debug(`${restoreSessions.length} Session(s) Restored`);
     } catch (error) {
-        logger.error(`[actionInstances]: ${error}`, error);
+        logger.error(`[actionInstances]: ${error}`);
     }
 };
 
