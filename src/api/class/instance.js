@@ -344,7 +344,13 @@ class WhatsAppInstance {
                     }
                 }
 
-                await this.callWebhook('connection:live', { live: true });
+                let payload = { live: true, phone: null, name: null };
+                if (sock?.authState?.creds?.me?.id && sock?.authState?.creds?.me?.name) {
+                    const { id, name } = sock.authState.creds.me;
+                    payload = { ...payload, phone: id.split(':')[0], name };
+                }
+
+                await this.callWebhook('connection:live', { ...payload });
                 this.instance.presenceLived = setTimeout(() => {
                     this.instance.em.emit('connection:live');
                 }, 30000);
