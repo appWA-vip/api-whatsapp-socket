@@ -430,7 +430,12 @@ class WhatsAppInstance {
                 await this.initContactsChats(Contacts);
                 this.instance.online = true;
                 this.instance.timeStart = Date.now();
-                await this.callWebhook('connection:open', { connection: connection });
+                let payload = { connection: connection, phone: null, name: null };
+                if (sock?.authState?.creds?.me?.id && sock?.authState?.creds?.me?.name) {
+                    const { id, name } = sock.authState.creds.me;
+                    payload = { ...payload, phone: id.split(':')[0], name };
+                }
+                await this.callWebhook('connection:open', { ...payload });
                 setTimeout(() => {
                     this.instance.em.emit('connection:live');
                 }, 8000);
