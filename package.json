@@ -1,5 +1,5 @@
 {
-    "name": "whatsapp-api-nodejs",
+    "name": "api-whatsapp",
     "version": "0.0.1",
     "description": "whatsapp-api-nodejs is builton top of Baileys-MD.",
     "main": "server.js",
@@ -28,7 +28,7 @@
             "git add"
         ]
     },
-    "repository": "git@github.com:appWA-vip/api-whatsapp-socket.git",
+    "repository": "git@github.com:WazzapGateway/api-whatsapp.git",
     "author": "Miguel Lomeli <lomelidev@gmail.com>",
     "license": "MIT",
     "dependencies": {
